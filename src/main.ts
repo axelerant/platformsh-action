@@ -26,22 +26,10 @@ export async function run(): Promise<void> {
 
     // Use @actions/exec to handle environment variable
     const env = { ...process.env, VERSION: cliVersion }
-    await exec(
-      'curl',
-      [
-        '-fsSL',
-        'https://raw.githubusercontent.com/platformsh/cli/main/installer.sh'
-      ],
-      { env }
-    )
-    await exec('bash')
+    await exec(`${__dirname}/script/install-cli.sh`, [], { env })
   } else {
     // Use @actions/exec to run the command without version
-    await exec('curl', [
-      '-fsSL',
-      'https://raw.githubusercontent.com/platformsh/cli/main/installer.sh'
-    ])
-    await exec('bash')
+    await exec(`${__dirname}/script/install-cli.sh`)
   }
 
   core.endGroup()

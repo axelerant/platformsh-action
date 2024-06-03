@@ -26247,19 +26247,11 @@ async function run() {
         }
         // Use @actions/exec to handle environment variable
         const env = { ...process.env, VERSION: cliVersion };
-        await (0, exec_1.exec)('curl', [
-            '-fsSL',
-            'https://raw.githubusercontent.com/platformsh/cli/main/installer.sh'
-        ], { env });
-        await (0, exec_1.exec)('bash');
+        await (0, exec_1.exec)(`${__dirname}/script/install-cli.sh`, [], { env });
     }
     else {
         // Use @actions/exec to run the command without version
-        await (0, exec_1.exec)('curl', [
-            '-fsSL',
-            'https://raw.githubusercontent.com/platformsh/cli/main/installer.sh'
-        ]);
-        await (0, exec_1.exec)('bash');
+        await (0, exec_1.exec)(`${__dirname}/script/install-cli.sh`);
     }
     core.endGroup();
     core.info('Inside custom action');

@@ -18,7 +18,7 @@ export async function run(): Promise<void> {
   if (cliVersion !== 'latest') {
     options.env = { ...process.env, VERSION: cliVersion }
   }
-  await exec(`${__dirname}/../script/install-cli.sh`, [], options)
+  await exec(`${__dirname}/install-cli.sh`, [], options)
 
   // Check platform  version
   await exec('platform --version')

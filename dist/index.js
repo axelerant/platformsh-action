@@ -26242,7 +26242,7 @@ async function run() {
     if (cliVersion !== 'latest') {
         options.env = { ...process.env, VERSION: cliVersion };
     }
-    await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh", [], options);
+    await (0, exec_1.exec)(`${__dirname}/install-cli.sh`, [], options);
     // Check platform  version
     await (0, exec_1.exec)('platform --version');
     core.endGroup();

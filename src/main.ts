@@ -30,6 +30,9 @@ export async function run(): Promise<void> {
   } else {
     // Use @actions/exec to run the command without version
     await exec(`${__dirname}/../script/install-cli.sh`)
+
+    // Check platform  version
+    await exec('platform --version')
   }
 
   core.endGroup()

@@ -26252,6 +26252,8 @@ async function run() {
     else {
         // Use @actions/exec to run the command without version
         await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh");
+        // Check platform  version
+        await (0, exec_1.exec)('platform --version');
     }
     core.endGroup();
     core.info('Inside custom action');

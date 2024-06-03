@@ -26238,23 +26238,13 @@ async function run() {
     }
     core.startGroup('Install Platform.sh cli');
     const cliVersion = core.getInput('cli-version');
-    // let cliInstallCommand =
-    //   'curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash'
+    const options = {};
     if (cliVersion !== 'latest') {
-        // Validate version input to prevent command injection
-        if (!/^[\d.]+$/.test(cliVersion)) {
-            throw new Error('Invalid version format. Only numbers and dots are allowed.');
-        }
-        // Use @actions/exec to handle environment variable
-        const env = { ...process.env, VERSION: cliVersion };
-        await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh", [], { env });
+        options.env = { ...process.env, VERSION: cliVersion };
     }
-    else {
-        // Use @actions/exec to run the command without version
-        await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh");
-        // Check platform  version
-        await (0, exec_1.exec)('platform --version');
-    }
+    await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh", [], options);
+    // Check platform  version
+    await (0, exec_1.exec)('platform --version');
     core.endGroup();
     core.info('Inside custom action');
 }

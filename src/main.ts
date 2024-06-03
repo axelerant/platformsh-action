@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { exec } from '@actions/exec'
+import { exec, ExecOptions } from '@actions/exec'
 
 /**
  * The main function for the action.
@@ -13,27 +13,15 @@ export async function run(): Promise<void> {
 
   core.startGroup('Install Platform.sh cli')
   const cliVersion = core.getInput('cli-version')
-  // let cliInstallCommand =
-  //   'curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash'
 
+  const options: ExecOptions = {}
   if (cliVersion !== 'latest') {
-    // Validate version input to prevent command injection
-    if (!/^[\d.]+$/.test(cliVersion)) {
-      throw new Error(
-        'Invalid version format. Only numbers and dots are allowed.'
-      )
-    }
-
-    // Use @actions/exec to handle environment variable
-    const env = { ...process.env, VERSION: cliVersion }
-    await exec(`${__dirname}/../script/install-cli.sh`, [], { env })
-  } else {
-    // Use @actions/exec to run the command without version
-    await exec(`${__dirname}/../script/install-cli.sh`)
-
-    // Check platform  version
-    await exec('platform --version')
+    options.env = { ...process.env, VERSION: cliVersion }
   }
+  await exec(`${__dirname}/../script/install-cli.sh`, [], options)
+
+  // Check platform  version
+  await exec('platform --version')
 
   core.endGroup()
   core.info('Inside custom action')

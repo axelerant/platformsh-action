@@ -26247,11 +26247,11 @@ async function run() {
         }
         // Use @actions/exec to handle environment variable
         const env = { ...process.env, VERSION: cliVersion };
-        await (0, exec_1.exec)(`${__dirname}/script/install-cli.sh`, [], { env });
+        await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh", [], { env });
     }
     else {
         // Use @actions/exec to run the command without version
-        await (0, exec_1.exec)(`${__dirname}/script/install-cli.sh`);
+        await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh");
     }
     core.endGroup();
     core.info('Inside custom action');

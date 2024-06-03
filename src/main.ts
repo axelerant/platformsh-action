@@ -26,10 +26,10 @@ export async function run(): Promise<void> {
 
     // Use @actions/exec to handle environment variable
     const env = { ...process.env, VERSION: cliVersion }
-    await exec(`${__dirname}/script/install-cli.sh`, [], { env })
+    await exec(`${__dirname}/../script/install-cli.sh`, [], { env })
   } else {
     // Use @actions/exec to run the command without version
-    await exec(`${__dirname}/script/install-cli.sh`)
+    await exec(`${__dirname}/../script/install-cli.sh`)
   }
 
   core.endGroup()

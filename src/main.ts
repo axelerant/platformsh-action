@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
 import { exec, ExecOptions } from '@actions/exec'
-
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -18,7 +17,7 @@ export async function run(): Promise<void> {
   if (cliVersion !== 'latest') {
     options.env = { ...process.env, VERSION: cliVersion }
   }
-  await exec(`${__dirname}/install-cli.sh`, [], options)
+  await exec(`${__dirname}/../scripts/install-cli.sh`, [], options)
 
   // Check platform  version
   await exec('platform --version')

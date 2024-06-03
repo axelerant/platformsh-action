@@ -1,6 +1,5 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Platform.sh Actions'
+description: 'Perform action on platform.sh projects'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,15 +8,33 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  action:
+    description: 'Action to perform'
     required: true
-    default: '1000'
-
+    default: 'deploy'
+  project-id:
+    description: 'Project ID on platform.sh'
+    required: true
+  cli-token:
+    description: 'Token for platform.sh CLI'
+    required: true
+  ssh-private-key:
+    description: 'SSH key to access the git repository on platform.sh'
+    required: false
+  cli-version:
+    description: 'Platform.sh CLI version to setup'
+    required: true
+    default: 'latest'
+  force-push:
+    description: 'Force push to Platform.sh'
+    required: false
+  environment-name:
+    description: 'Name of the platform.sh instance'
+    required: false
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  deployed-url:
+    description: 'URL of deployed instance'
 
 runs:
   using: node20

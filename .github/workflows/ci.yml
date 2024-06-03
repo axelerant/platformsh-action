@@ -57,7 +57,9 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          action: 'deploy'
+          project-id: 'abc'
+          cli-token: 'test-token'
 
       - name: Print Output
         id: output

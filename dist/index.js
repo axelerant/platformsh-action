@@ -26238,15 +26238,29 @@ async function run() {
     }
     core.startGroup('Install Platform.sh cli');
     const cliVersion = core.getInput('cli-version');
-    let cliInstallUrl = 'curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash';
+    // let cliInstallCommand =
+    //   'curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | bash'
     if (cliVersion !== 'latest') {
         // Validate version input to prevent command injection
         if (!/^[\d.]+$/.test(cliVersion)) {
             throw new Error('Invalid version format. Only numbers and dots are allowed.');
         }
-        cliInstallUrl = `curl -fsSL https://raw.githubusercontent.com/platformsh/cli/main/installer.sh | VERSION=${cliVersion} bash`;
+        // Use @actions/exec to handle environment variable
+        const env = { ...process.env, VERSION: cliVersion };
+        await (0, exec_1.exec)('curl', [
+            '-fsSL',
+            'https://raw.githubusercontent.com/platformsh/cli/main/installer.sh'
+        ], { env });
+        await (0, exec_1.exec)('bash');
     }
-    await (0, exec_1.exec)(cliInstallUrl);
+    else {
+        // Use @actions/exec to run the command without version
+        await (0, exec_1.exec)('curl', [
+            '-fsSL',
+            'https://raw.githubusercontent.com/platformsh/cli/main/installer.sh'
+        ]);
+        await (0, exec_1.exec)('bash');
+    }
     core.endGroup();
     core.info('Inside custom action');
 }

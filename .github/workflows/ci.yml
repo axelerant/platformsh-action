@@ -59,7 +59,7 @@ jobs:
         with:
           action: 'deploy'
           project-id: 'abc'
-          cli-token: 'test-token'
+          cli-token: ${{ secrets.PLATFORMSH_CLI_TOKEN }}
           # cli-version: '5.0.9'
 
       - name: Print Output

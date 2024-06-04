@@ -26338,10 +26338,10 @@ async function run() {
         throw new Error('Invalid action to perform');
     }
     // Install CLI
-    (0, install_cli_1.installCli)();
+    await (0, install_cli_1.installCli)();
     // Deploy to platform.sh
     if (action === 'deploy') {
-        (0, deploy_1.deploy)();
+        await (0, deploy_1.deploy)();
     }
     core.info('Inside custom action');
 }

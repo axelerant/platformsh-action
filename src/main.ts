@@ -12,11 +12,11 @@ export async function run(): Promise<void> {
   }
 
   // Install CLI
-  installCli()
+  await installCli()
 
   // Deploy to platform.sh
   if (action === 'deploy') {
-    deploy()
+    await deploy()
   }
 
   core.info('Inside custom action')

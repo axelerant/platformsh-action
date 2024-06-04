@@ -26151,6 +26151,57 @@ exports["default"] = _default;
 
 /***/ }),
 
+/***/ 5930:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.deploy = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const exec_1 = __nccwpck_require__(1514);
+async function deploy() {
+    core.startGroup('Deploy to Platform.sh');
+    const env = {
+        ...process.env,
+        SSH_PRIVATE_KEY: core.getInput('ssh-private-key'),
+        PLATFORM_PROJECT_ID: core.getInput('project-id'),
+        PLATFORMSH_CLI_TOKEN: core.getInput('cli-token'),
+        FORCE_PUSH: core.getInput('force-push'),
+        ENVIRONMENT_NAME: core.getInput('environment-name'),
+        KNOWN_HOSTS_PATH: __nccwpck_require__.ab + "known_hosts"
+    };
+    await (0, exec_1.exec)(__nccwpck_require__.ab + "deploy.sh", [], { env });
+    core.endGroup();
+}
+exports.deploy = deploy;
+
+
+/***/ }),
+
 /***/ 6144:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -26195,6 +26246,55 @@ catch (error) {
 
 /***/ }),
 
+/***/ 5367:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.installCli = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const exec_1 = __nccwpck_require__(1514);
+async function installCli() {
+    core.startGroup('Install Platform.sh cli');
+    const cliVersion = core.getInput('cli-version');
+    const options = {};
+    if (cliVersion !== 'latest') {
+        options.env = { ...process.env, VERSION: cliVersion };
+    }
+    await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh", [], options);
+    // Check platform  version
+    await (0, exec_1.exec)('platform --version');
+    core.endGroup();
+}
+exports.installCli = installCli;
+
+
+/***/ }),
+
 /***/ 399:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -26226,7 +26326,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const exec_1 = __nccwpck_require__(1514);
+const deploy_1 = __nccwpck_require__(5930);
+const install_cli_1 = __nccwpck_require__(5367);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -26236,16 +26337,12 @@ async function run() {
     if (!['deploy', 'clean'].includes(action)) {
         throw new Error('Invalid action to perform');
     }
-    core.startGroup('Install Platform.sh cli');
-    const cliVersion = core.getInput('cli-version');
-    const options = {};
-    if (cliVersion !== 'latest') {
-        options.env = { ...process.env, VERSION: cliVersion };
+    // Install CLI
+    (0, install_cli_1.installCli)();
+    // Deploy to platform.sh
+    if (action === 'deploy') {
+        (0, deploy_1.deploy)();
     }
-    await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh", [], options);
-    // Check platform  version
-    await (0, exec_1.exec)('platform --version');
-    core.endGroup();
     core.info('Inside custom action');
 }
 exports.run = run;

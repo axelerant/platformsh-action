@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
-import { exec, ExecOptions } from '@actions/exec'
+import { deploy } from './deploy'
+import { installCli } from './install-cli'
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -10,18 +11,13 @@ export async function run(): Promise<void> {
     throw new Error('Invalid action to perform')
   }
 
-  core.startGroup('Install Platform.sh cli')
-  const cliVersion = core.getInput('cli-version')
+  // Install CLI
+  installCli()
 
-  const options: ExecOptions = {}
-  if (cliVersion !== 'latest') {
-    options.env = { ...process.env, VERSION: cliVersion }
+  // Deploy to platform.sh
+  if (action === 'deploy') {
+    deploy()
   }
-  await exec(`${__dirname}/../scripts/install-cli.sh`, [], options)
 
-  // Check platform  version
-  await exec('platform --version')
-
-  core.endGroup()
   core.info('Inside custom action')
 }

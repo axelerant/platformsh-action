@@ -12,11 +12,9 @@ export async function run(): Promise<void> {
     throw new Error('Invalid action to perform')
   }
 
-  // Install CLI
-  await installCli()
-
   // Deploy to platform.sh
   if (action === 'deploy') {
+    await installCli()
     await deploy()
     return
   }

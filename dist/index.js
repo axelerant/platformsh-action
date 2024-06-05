@@ -30682,10 +30682,9 @@ async function run() {
     if (!['deploy', 'clean-pr-env'].includes(action)) {
         throw new Error('Invalid action to perform');
     }
-    // Install CLI
-    await (0, install_cli_1.installCli)();
     // Deploy to platform.sh
     if (action === 'deploy') {
+        await (0, install_cli_1.installCli)();
         await (0, deploy_1.deploy)();
         return;
     }

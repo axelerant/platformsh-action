@@ -1,0 +1,20 @@
+name: Clean Platform.sh env on PR Close
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  on-pr-close:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clean Platform.sh env if available
+        uses: ./
+        with:
+          action: 'clean-pr-env'
+          project-id: ${{ secrets.PROJECT_ID }}
+          cli-token: ${{ secrets.PLATFORMSH_CLI_TOKEN }}

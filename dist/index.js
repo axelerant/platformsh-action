@@ -26450,14 +26450,18 @@ const getAccessToken = async (cliToken) => {
             throw new Error(`Unable to authenticate: ${response.status}`);
         }
         const data = await response.json();
-        return data;
+        // Assuming the response data contains an access_token field
+        if (!data.access_token) {
+            throw new Error('No access token found in the response');
+        }
+        return data.access_token;
     }
     catch (error) {
         if (error instanceof Error) {
             throw new Error(`Unable to authenticate: ${error.message}`);
         }
         else {
-            throw new Error(`Unable to authenticate: ${error}`);
+            throw new Error(`Unable to authenticate: ${String(error)}`);
         }
     }
 };

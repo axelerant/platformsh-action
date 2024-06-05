@@ -1,11 +1,13 @@
 import * as core from '@actions/core'
 import Client from 'platformsh-client'
+import { getAccessToken } from './utils'
 
 export async function cleanPrEnv(): Promise<void> {
   core.startGroup('Cleanr PR env from Platform.sh')
+  const accessToken = await getAccessToken(core.getInput('cli-token'))
   const client = new Client({
-    api_token: core.getInput('cli-token'),
-    api_url: '',
+    access_token: accessToken,
+    api_url: 'https://api.platform.sh/api',
     authorization: ''
   })
 

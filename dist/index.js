@@ -26194,11 +26194,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cleanPrEnv = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const platformsh_client_1 = __importDefault(__nccwpck_require__(5052));
+const utils_1 = __nccwpck_require__(1314);
 async function cleanPrEnv() {
     core.startGroup('Cleanr PR env from Platform.sh');
+    const accessToken = await (0, utils_1.getAccessToken)(core.getInput('cli-token'));
     const client = new platformsh_client_1.default({
-        api_token: core.getInput('cli-token'),
-        api_url: '',
+        access_token: accessToken,
+        api_url: 'https://api.platform.sh/api',
         authorization: ''
     });
     const projects = await client.getProjects();
@@ -26417,6 +26419,49 @@ async function run() {
     }
 }
 exports.run = run;
+
+
+/***/ }),
+
+/***/ 1314:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getAccessToken = void 0;
+const getAccessToken = async (cliToken) => {
+    const basicAuth = Buffer.from('platform-cli:', 'latin1').toString('base64');
+    const credentials = {
+        grant_type: 'api_token',
+        api_token: cliToken
+    };
+    const headers = {
+        Authorization: `Basic ${basicAuth}`,
+        'Content-Type': 'application/json'
+    };
+    try {
+        const response = await fetch(`https://accounts.platform.sh/oauth2/token`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(credentials)
+        });
+        if (!response.ok) {
+            throw new Error(`Unable to authenticate: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            throw new Error(`Unable to authenticate: ${error.message}`);
+        }
+        else {
+            throw new Error(`Unable to authenticate: ${error}`);
+        }
+    }
+};
+exports.getAccessToken = getAccessToken;
 
 
 /***/ }),

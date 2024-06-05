@@ -58,7 +58,7 @@ jobs:
         uses: ./
         with:
           action: 'clean-pr-env'
-          project-id: 'abc'
+          project-id: ${{ secrets.PROJECT_ID }}
           cli-token: ${{ secrets.PLATFORMSH_CLI_TOKEN }}
           # cli-version: '5.0.9'
 

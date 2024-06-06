@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: write
@@ -14,22 +14,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run all
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run all
 
-    - uses: stefanzweifel/git-auto-commit-action@v5
-      if: github.event_name != 'pull_request'
-      with:
-        commit_message: Add prepared script
-        commit_options: '--no-verify --signoff'
-        file_pattern: dist/
-        commit_user_name: github-actions
-        commit_user_email: github-actions[bot]@users.noreply.github.com
-        commit_author: hw <github-actions[bot]@users.noreply.github.com>
-        push_options: ''
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        if: github.event_name != 'pull_request'
+        with:
+          commit_message: Add prepared script
+          commit_options: '--no-verify --signoff'
+          file_pattern: dist/
+          commit_user_name: github-actions
+          commit_user_email: github-actions[bot]@users.noreply.github.com
+          commit_author: hw <github-actions[bot]@users.noreply.github.com>
+          push_options: ''

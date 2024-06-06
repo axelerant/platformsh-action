@@ -11,6 +11,7 @@ export async function cleanPrEnv(): Promise<void> {
     core.warning(
       `Unable to identify PR No. Please make sure this action runs only on PR close`
     )
+    core.endGroup()
     return
   }
 

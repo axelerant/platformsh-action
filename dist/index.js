@@ -30819,10 +30819,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.installCli = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
+const app_root_path_1 = __importDefault(__nccwpck_require__(4808));
 async function installCli() {
     core.startGroup('Install Platform.sh cli');
     const cliVersion = core.getInput('cli-version');
@@ -30830,9 +30834,7 @@ async function installCli() {
     if (cliVersion !== 'latest') {
         options.env = { ...process.env, VERSION: cliVersion };
     }
-    await (0, exec_1.exec)(__nccwpck_require__.ab + "install-cli.sh", [], options);
-    // Check platform  version
-    await (0, exec_1.exec)('platform --version');
+    await (0, exec_1.exec)(`${app_root_path_1.default}/scripts/install-cli.sh`, [], options);
     core.endGroup();
 }
 exports.installCli = installCli;

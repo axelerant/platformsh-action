@@ -7013,6 +7013,190 @@ var request = withDefaults(import_endpoint.endpoint, {
 
 /***/ }),
 
+/***/ 4808:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var lib = __nccwpck_require__(8035);
+module.exports = lib(__dirname);
+
+/***/ }),
+
+/***/ 8035:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+module.exports = function(dirname) {
+	var path = __nccwpck_require__(1017);
+	var resolve = __nccwpck_require__(5619);
+	var appRootPath = resolve(dirname);
+
+	var publicInterface = {
+		resolve: function(pathToModule) {
+			return path.join(appRootPath, pathToModule);
+		},
+
+		require: function(pathToModule) {
+			return require(publicInterface.resolve(pathToModule));
+		},
+
+		toString: function() {
+			return appRootPath;
+		},
+
+		setPath: function(explicitlySetPath) {
+			appRootPath = path.resolve(explicitlySetPath);
+			publicInterface.path = appRootPath;
+		},
+
+		path: appRootPath
+	};
+
+	return publicInterface;
+};
+
+/***/ }),
+
+/***/ 5619:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+// Dependencies
+var path = __nccwpck_require__(1017);
+
+// Load global paths
+var globalPaths = (__nccwpck_require__(8188).globalPaths);
+
+// Guess at NPM's global install dir
+var npmGlobalPrefix;
+if ('win32' === process.platform) {
+	npmGlobalPrefix = path.dirname(process.execPath);
+} else {
+	npmGlobalPrefix = path.dirname(path.dirname(process.execPath));
+}
+var npmGlobalModuleDir = path.resolve(npmGlobalPrefix, 'lib', 'node_modules');
+
+// Save OS-specific path separator
+var sep = path.sep;
+
+// If we're in webpack, force it to use the original require() method
+var requireFunction = ( true)
+	? eval("require")
+	: 0;
+
+const isInstalledWithPNPM = function(resolved) {
+	const pnpmDir = sep + '.pnpm';
+
+	for (const globalPath of globalPaths) {
+		if (-1 !== globalPath.indexOf(pnpmDir) && -1 !== resolved.indexOf(pnpmDir)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+const getFirstPartFromNodeModules = function(resolved) {
+	const nodeModulesDir = sep + 'node_modules';
+
+	if (-1 !== resolved.indexOf(nodeModulesDir)) {
+		const parts = resolved.split(nodeModulesDir);
+		if (parts.length) {
+			return parts[0];
+		}
+	}
+
+	return null;
+}
+
+// Resolver
+module.exports = function resolve(dirname) {
+	// Check for environmental variable
+	if (process.env.APP_ROOT_PATH) {
+		return path.resolve(process.env.APP_ROOT_PATH);
+	}
+
+	// Defer to Yarn Plug'n'Play if enabled
+	if (process.versions.pnp) {
+		try {
+			var pnp = requireFunction('pnpapi');
+			return pnp.getPackageInformation(pnp.topLevel).packageLocation;
+		} catch (e) {}
+	}
+
+	// Defer to main process in electron renderer
+	if ('undefined' !== typeof window && window.process && 'renderer' === window.process.type) {
+		try {
+			var remote = requireFunction('electron').remote;
+			return remote.require('app-root-path').path;
+		} catch (e) {}
+	}
+
+	// Defer to AWS Lambda when executing there
+	if (process.env.LAMBDA_TASK_ROOT && process.env.AWS_EXECUTION_ENV) {
+		return process.env.LAMBDA_TASK_ROOT;
+	}
+
+	var resolved = path.resolve(dirname);
+	var alternateMethod = false;
+	var appRootPath = null;
+
+	// Check if the globalPaths contain some folders with '.pnpm' in the path
+	// If yes this means it is most likely installed with pnpm
+	if (isInstalledWithPNPM(resolved)) {
+		appRootPath = getFirstPartFromNodeModules(resolved);
+
+		if (appRootPath) {
+			return appRootPath;
+		}
+	}
+
+	// Make sure that we're not loaded from a global include path
+	// Eg. $HOME/.node_modules
+	//     $HOME/.node_libraries
+	//     $PREFIX/lib/node
+	globalPaths.forEach(function(globalPath) {
+		if (!alternateMethod && 0 === resolved.indexOf(globalPath)) {
+			alternateMethod = true;
+		}
+	});
+
+	// If the app-root-path library isn't loaded globally,
+	// and node_modules exists in the path, just split __dirname
+	if (!alternateMethod) {
+		appRootPath = getFirstPartFromNodeModules(resolved);
+	}
+
+	// If the above didn't work, or this module is loaded globally, then
+	// resort to require.main.filename (See http://nodejs.org/api/modules.html)
+	if ((alternateMethod || null == appRootPath)) {
+		if (requireFunction.main) {
+			appRootPath = path.dirname(requireFunction.main.filename);
+		} else {
+			// This is the case when app-root-path is bundle'd to a commonjs2 format and is being called from an esm file.
+			// In those cases require.main is undefined (See https://nodejs.org/api/modules.html#accessing-the-main-module)
+			// At that point we can only get the root from looking at the callee
+			appRootPath = path.dirname(process.argv[1]);
+		}
+	}
+
+	// Handle global bin/ directory edge-case
+	if (alternateMethod && -1 !== appRootPath.indexOf(npmGlobalModuleDir) && (appRootPath.length - 4) === appRootPath.indexOf(sep + 'bin')) {
+		appRootPath = appRootPath.slice(0, -4);
+	}
+
+	// Return
+	return appRootPath;
+};
+
+
+/***/ }),
+
 /***/ 3682:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -30536,10 +30720,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploy = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
+const app_root_path_1 = __importDefault(__nccwpck_require__(4808));
 async function deploy() {
     core.startGroup('Deploy to Platform.sh');
     const env = {
@@ -30549,9 +30737,9 @@ async function deploy() {
         PLATFORMSH_CLI_TOKEN: core.getInput('cli-token'),
         FORCE_PUSH: core.getInput('force-push'),
         ENVIRONMENT_NAME: core.getInput('environment-name'),
-        KNOWN_HOSTS_PATH: __nccwpck_require__.ab + "known_hosts"
+        KNOWN_HOSTS_PATH: `${app_root_path_1.default}/known_hosts`
     };
-    await (0, exec_1.exec)(__nccwpck_require__.ab + "deploy.sh", [], { env });
+    await (0, exec_1.exec)(`${app_root_path_1.default}/scripts/deploy.sh`, [], { env });
     core.endGroup();
 }
 exports.deploy = deploy;
@@ -30859,6 +31047,14 @@ module.exports = require("http2");
 
 "use strict";
 module.exports = require("https");
+
+/***/ }),
+
+/***/ 8188:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("module");
 
 /***/ }),
 

@@ -33,7 +33,8 @@
     "package": "npx ncc build src/index.ts -o dist --source-map --license licenses.txt",
     "package:watch": "npm run package -- --watch",
     "test": "npx jest",
-    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
+    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package && npm run copy-extra",
+    "copy-extra": "copyfiles known_hosts scripts/* dist"
   },
   "license": "MIT",
   "jest": {
@@ -69,6 +70,8 @@
     "@actions/core": "^1.10.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
+    "app-root-path": "^3.1.0",
+    "copyfiles": "^2.4.1",
     "platformsh-client": "^0.2.4"
   },
   "devDependencies": {

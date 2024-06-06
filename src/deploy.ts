@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { exec } from '@actions/exec'
+import appRootPath from 'app-root-path'
 
 export async function deploy(): Promise<void> {
   core.startGroup('Deploy to Platform.sh')
@@ -10,8 +11,8 @@ export async function deploy(): Promise<void> {
     PLATFORMSH_CLI_TOKEN: core.getInput('cli-token'),
     FORCE_PUSH: core.getInput('force-push'),
     ENVIRONMENT_NAME: core.getInput('environment-name'),
-    KNOWN_HOSTS_PATH: `${__dirname}/../known_hosts`
+    KNOWN_HOSTS_PATH: `${appRootPath}/known_hosts`
   }
-  await exec(`${__dirname}/../scripts/deploy.sh`, [], { env })
+  await exec(`${appRootPath}/scripts/deploy.sh`, [], { env })
   core.endGroup()
 }

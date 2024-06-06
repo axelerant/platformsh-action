@@ -30595,12 +30595,7 @@ const runAsync = async () => {
         await (0, main_1.run)();
     }
     catch (error) {
-        if (error instanceof Error) {
-            core.setFailed(error.message);
-        }
-        else {
-            core.setFailed('Something went wrong.');
-        }
+        core.setFailed(`Error - ${error.message}`);
     }
 };
 runAsync();

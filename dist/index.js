@@ -30470,7 +30470,11 @@ const utils_1 = __nccwpck_require__(1314);
 const github = __importStar(__nccwpck_require__(5438));
 async function cleanPrEnv() {
     core.startGroup('Cleanr PR env from Platform.sh');
-    core.info(`PR No: ${github.context.payload.pull_request?.number}`);
+    const prNumber = github.context.payload.pull_request?.number;
+    if (!prNumber) {
+        core.warning(`Unable to identify PR No. Please make sure this action runs only on PR close`);
+        return;
+    }
     const accessToken = await (0, utils_1.getAccessToken)(core.getInput('cli-token'));
     const client = new platformsh_client_1.default({
         access_token: accessToken,
@@ -30478,16 +30482,25 @@ async function cleanPrEnv() {
         authorization: ''
     });
     // Get env details
-    const prRef = '494/merge';
+    const prRef = `${prNumber}/merge`;
     const envResult = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(prRef));
-    if (envResult) {
-        core.info(`Enviroment type is ${envResult.type}`);
-        core.info(`Enviroment name is ${envResult.name}`);
+    core.info(`Environment type is ${envResult.type}`);
+    core.info(`Environment name is ${envResult.name}`);
+    if (envResult.type !== 'development') {
+        core.info(`Skipping ${prRef} environment deletion as it's not a development environment`);
+        core.endGroup();
+        return;
     }
-    else {
-        core.info(`No env running for PR - ${prRef}`);
-    }
-    core.info('Env cleaned');
+    // Deactivate env first.
+    const activity = await envResult.deactivate();
+    core.info(`Deactivating ${prRef} environment...`);
+    // @todo display activity log
+    await activity.wait();
+    core.info(`${prRef} environment deactivated successfully.`);
+    // Fetch again for deletion as active env can not be deleted and current resource points to active env.
+    const envResultDelete = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(prRef));
+    await envResultDelete.delete();
+    core.info(`${prRef} environment deleted successfully`);
     core.endGroup();
 }
 exports.cleanPrEnv = cleanPrEnv;
@@ -30577,15 +30590,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const main_1 = __nccwpck_require__(399);
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-try {
-    (0, main_1.run)();
-}
-catch (error) {
-    // Fail the workflow run if an error occurs
-    if (error instanceof Error)
-        core.setFailed(error.message);
-}
+const runAsync = async () => {
+    try {
+        await (0, main_1.run)();
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.setFailed(error.message);
+        }
+        else {
+            core.setFailed('Something went wrong.');
+        }
+    }
+};
+runAsync();
 
 
 /***/ }),

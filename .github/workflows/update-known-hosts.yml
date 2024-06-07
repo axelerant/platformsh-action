@@ -14,7 +14,7 @@ jobs:
         php-version: 8.1
     - uses: adam7/platformsh-cli-action@v1.2
       with:
-        token: ${{ secrets.PLATFORM_CLI_TOKEN }}
+        token: ${{ secrets.PLATFORMSH_CLI_TOKEN }}
     - run: ./.github/update-known-hosts.php
     - run: mv ./.github/known_hosts . && cp ./known_hosts ./dist/known_hosts
 

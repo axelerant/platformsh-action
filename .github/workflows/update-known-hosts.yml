@@ -22,7 +22,7 @@ jobs:
       with:
         commit_message: Update known_hosts file
         commit_options: '--no-verify --signoff'
-        file_pattern: known_hosts
+        file_pattern: 'known_hosts dist/known_hosts'
         commit_user_name: github-actions
         commit_user_email: github-actions[bot]@users.noreply.github.com
         commit_author: hw <github-actions[bot]@users.noreply.github.com>

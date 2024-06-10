@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '30 5 * * 1'
 
+permissions:
+  contents: write
+
 jobs:
   known-hosts:
     runs-on: ubuntu-latest

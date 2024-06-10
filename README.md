@@ -42,13 +42,18 @@ No outputs.
 ### Deployment
 
 ```yaml
-uses: zeshanziya/platformsh-actions@v1
-with:
-  action: 'deploy'
-  project-id: ${{ secrets.PlatformProjectId }}
-  cli-token: ${{ secrets.PlatformCliToken }}
-  ssh-private-key: ${{ secrets.PlatformSshKey }}
-  force-push: true
+- name: Check out repository code
+  uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- name: Deploy to platform.sh
+  uses: zeshanziya/platformsh-actions@v1
+  with:
+    action: 'deploy'
+    project-id: ${{ secrets.PlatformProjectId }}
+    cli-token: ${{ secrets.PlatformCliToken }}
+    ssh-private-key: ${{ secrets.PlatformSshKey }}
+    force-push: true
 ```
 
 ### Delete PR Env

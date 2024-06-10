@@ -47,7 +47,7 @@ No outputs.
   with:
     fetch-depth: 0
 - name: Deploy to platform.sh
-  uses: zeshanziya/platformsh-actions@v1
+  uses: axelerant/platformsh-actions@v1
   with:
     action: 'deploy'
     project-id: ${{ secrets.PlatformProjectId }}
@@ -59,7 +59,7 @@ No outputs.
 ### Delete PR Env
 
 ```yaml
-uses: zeshanziya/platformsh-actions@v1
+uses: axelerant/platformsh-actions@v1
 with:
   action: 'clean-pr-env'
   project-id: ${{ secrets.PlatformProjectId }}

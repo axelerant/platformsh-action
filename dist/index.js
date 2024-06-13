@@ -30643,13 +30643,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cleanPrEnv = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const platformsh_client_1 = __importDefault(__nccwpck_require__(5052));
 const utils_1 = __nccwpck_require__(1314);
 const github = __importStar(__nccwpck_require__(5438));
 async function cleanPrEnv() {
@@ -30660,12 +30656,7 @@ async function cleanPrEnv() {
         core.endGroup();
         return;
     }
-    const accessToken = await (0, utils_1.getAccessToken)(core.getInput('cli-token'));
-    const client = new platformsh_client_1.default({
-        access_token: accessToken,
-        api_url: 'https://api.platform.sh/api',
-        authorization: ''
-    });
+    const client = await (0, utils_1.getCliClient)(core.getInput('cli-token'));
     // Get env details
     const prRef = `${prNumber}/merge`;
     const envResult = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(prRef));
@@ -30689,6 +30680,56 @@ async function cleanPrEnv() {
     core.endGroup();
 }
 exports.cleanPrEnv = cleanPrEnv;
+
+
+/***/ }),
+
+/***/ 4334:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.outputEnvironmentUrl = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils_1 = __nccwpck_require__(1314);
+async function outputEnvironmentUrl() {
+    core.startGroup('Output deployed URL');
+    const client = await (0, utils_1.getCliClient)(core.getInput('cli-token'));
+    const envName = (0, utils_1.getEnvironmentName)();
+    const envResult = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(envName));
+    const urls = envResult.getRouteUrls();
+    let url = urls.find(item => item.startsWith('https'));
+    if (!url) {
+        url = urls[0];
+    }
+    core.setOutput('deployed-url', url);
+    core.endGroup();
+}
+exports.outputEnvironmentUrl = outputEnvironmentUrl;
 
 
 /***/ }),
@@ -30729,19 +30770,22 @@ exports.deploy = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
 const app_root_path_1 = __importDefault(__nccwpck_require__(4808));
+const utils_1 = __nccwpck_require__(1314);
 async function deploy() {
     core.startGroup('Deploy to Platform.sh');
+    const envName = (0, utils_1.getEnvironmentName)();
     const env = {
         ...process.env,
         SSH_PRIVATE_KEY: core.getInput('ssh-private-key'),
         PLATFORM_PROJECT_ID: core.getInput('project-id'),
         PLATFORMSH_CLI_TOKEN: core.getInput('cli-token'),
         FORCE_PUSH: core.getInput('force-push'),
-        ENVIRONMENT_NAME: core.getInput('environment-name'),
+        ENVIRONMENT_NAME: envName,
         KNOWN_HOSTS_PATH: `${app_root_path_1.default}/known_hosts`
     };
-    await (0, exec_1.exec)(`${app_root_path_1.default}/scripts/deploy.sh`, [], { env });
+    const exitCode = await (0, exec_1.exec)(`${app_root_path_1.default}/scripts/deploy.sh`, [], { env });
     core.endGroup();
+    return exitCode;
 }
 exports.deploy = deploy;
 
@@ -30877,6 +30921,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const deploy_1 = __nccwpck_require__(5930);
 const install_cli_1 = __nccwpck_require__(5367);
 const clean_pr_env_1 = __nccwpck_require__(9699);
+const deploy_output_1 = __nccwpck_require__(4334);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -30889,7 +30934,11 @@ async function run() {
     // Deploy to platform.sh
     if (action === 'deploy') {
         await (0, install_cli_1.installCli)();
-        await (0, deploy_1.deploy)();
+        const exitCode = await (0, deploy_1.deploy)();
+        // fetch and set the output url
+        if (exitCode === 0) {
+            (0, deploy_output_1.outputEnvironmentUrl)();
+        }
         return;
     }
     // Clean the env
@@ -30903,12 +30952,40 @@ exports.run = run;
 /***/ }),
 
 /***/ 1314:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getAccessToken = void 0;
+exports.getEnvironmentName = exports.getCliClient = exports.getAccessToken = void 0;
+const platformsh_client_1 = __importDefault(__nccwpck_require__(5052));
+const core = __importStar(__nccwpck_require__(2186));
 const getAccessToken = async (cliToken) => {
     const basicAuth = Buffer.from('platform-cli:', 'latin1').toString('base64');
     const credentials = {
@@ -30945,6 +31022,26 @@ const getAccessToken = async (cliToken) => {
     }
 };
 exports.getAccessToken = getAccessToken;
+const getCliClient = async (cliToken) => {
+    const accessToken = await (0, exports.getAccessToken)(cliToken);
+    return new platformsh_client_1.default({
+        access_token: accessToken,
+        api_url: 'https://api.platform.sh/api',
+        authorization: ''
+    });
+};
+exports.getCliClient = getCliClient;
+const getEnvironmentName = () => {
+    let envName = core.getInput('environment-name');
+    if (!envName) {
+        const { GITHUB_REF_NAME } = process.env;
+        if (GITHUB_REF_NAME) {
+            envName = GITHUB_REF_NAME;
+        }
+    }
+    return envName;
+};
+exports.getEnvironmentName = getEnvironmentName;
 
 
 /***/ }),

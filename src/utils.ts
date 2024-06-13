@@ -1,3 +1,6 @@
+import Client from 'platformsh-client'
+import * as core from '@actions/core'
+
 export const getAccessToken = async (cliToken: string): Promise<string> => {
   const basicAuth = Buffer.from('platform-cli:', 'latin1').toString('base64')
   const credentials = {
@@ -35,4 +38,24 @@ export const getAccessToken = async (cliToken: string): Promise<string> => {
       throw new Error(`Unable to authenticate: ${String(error)}`)
     }
   }
+}
+
+export const getCliClient = async (cliToken: string): Promise<Client> => {
+  const accessToken = await getAccessToken(cliToken)
+  return new Client({
+    access_token: accessToken,
+    api_url: 'https://api.platform.sh/api',
+    authorization: ''
+  })
+}
+
+export const getEnvironmentName = (): string => {
+  let envName = core.getInput('environment-name')
+  if (!envName) {
+    const { GITHUB_REF_NAME } = process.env
+    if (GITHUB_REF_NAME) {
+      envName = GITHUB_REF_NAME
+    }
+  }
+  return envName
 }

@@ -1,64 +1,136 @@
-import { getAccessToken } from '../src/utils'
+import {
+  getAccessToken,
+  getCliClient,
+  getEnvironmentName
+} from './../src/utils'
+import * as utils from './../src/utils'
+import Client from 'platformsh-client'
+import * as core from '@actions/core'
 
-describe('getAccessToken', () => {
-  it('should return an access token when the request is successful', async () => {
-    const mockResponse = {
-      ok: true,
-      json: jest.fn().mockResolvedValue({ access_token: 'my-access-token' })
-    }
-    global.fetch = jest.fn().mockResolvedValue(mockResponse)
-
-    const accessToken = await getAccessToken('my-cli-token')
-    const basicAuth = Buffer.from('platform-cli:', 'latin1').toString('base64')
-
-    expect(accessToken).toBe('my-access-token')
-    expect(fetch).toHaveBeenCalledWith(
-      'https://accounts.platform.sh/oauth2/token',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${basicAuth}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          grant_type: 'api_token',
-          api_token: 'my-cli-token'
-        })
+describe('utils', () => {
+  describe('getAccessToken', () => {
+    it('should return an access token', async () => {
+      // Mock fetch to return a successful response
+      const mockResponse = {
+        ok: true,
+        json: jest.fn().mockResolvedValue({ access_token: 'my-access-token' })
       }
-    )
+      global.fetch = jest.fn().mockResolvedValue(mockResponse)
+      const basicAuth = Buffer.from('platform-cli:', 'latin1').toString(
+        'base64'
+      )
+
+      const accessToken = await getAccessToken('test-cli-token')
+      expect(accessToken).toBe('my-access-token')
+      expect(fetch).toHaveBeenCalledWith(
+        'https://accounts.platform.sh/oauth2/token',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${basicAuth}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            grant_type: 'api_token',
+            api_token: 'test-cli-token'
+          })
+        }
+      )
+    })
+
+    it('should throw an error if the response is not ok', async () => {
+      // Mock fetch to return an unsuccessful response
+      jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: false,
+        status: 401
+      } as Response)
+
+      await expect(getAccessToken('test-cli-token')).rejects.toThrow(
+        'Unable to authenticate: 401'
+      )
+    })
+
+    it('should throw an error if the response does not contain an access token', async () => {
+      // Mock fetch to return a response without an access token
+      jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({})
+      } as any as Response)
+
+      await expect(getAccessToken('test-cli-token')).rejects.toThrow(
+        'No access token found in the response'
+      )
+    })
+
+    it('should throw an error if there is an error during the fetch', async () => {
+      // Mock fetch to throw an error
+      const mockFetch = jest
+        .spyOn(global, 'fetch')
+        .mockRejectedValue(new Error('Network error'))
+
+      await expect(getAccessToken('test-cli-token')).rejects.toThrow(
+        'Unable to authenticate: Network error'
+      )
+    })
+
+    it('should throw an error if something goes wrong', async () => {
+      // Mock fetch to throw an error
+      const mockFetch = jest
+        .spyOn(global, 'fetch')
+        .mockRejectedValue('Something went wrong')
+
+      await expect(getAccessToken('test-cli-token')).rejects.toThrow(
+        'Unable to authenticate: Something went wrong'
+      )
+    })
   })
 
-  it('should throw an error if the request fails', async () => {
-    const mockResponse = {
-      ok: false,
-      status: 401,
-      statusText: 'Unauthorized'
-    }
-    global.fetch = jest.fn().mockResolvedValue(mockResponse)
+  describe('getCliClient', () => {
+    it('should return a Client instance', async () => {
+      // Mock getAccessToken to return a test access token
+      const mockGetAccessToken = jest
+        .spyOn(utils, 'getAccessToken')
+        .mockResolvedValue('test-access-token')
 
-    await expect(getAccessToken('my-cli-token')).rejects.toThrow(
-      'Unable to authenticate: 401'
-    )
+      const client = await getCliClient('test-cli-token')
+      expect(client).toBeInstanceOf(Client)
+      expect(client.getConfig()).toEqual(
+        expect.objectContaining({
+          access_token: 'test-access-token',
+          api_url: 'https://api.platform.sh/api'
+        })
+      )
+      expect(mockGetAccessToken).toHaveBeenCalledWith('test-cli-token')
+    })
   })
 
-  it('should throw an error if the response does not contain an access token', async () => {
-    const mockResponse = {
-      ok: true,
-      json: jest.fn().mockResolvedValue({})
-    }
-    global.fetch = jest.fn().mockResolvedValue(mockResponse)
+  describe('getEnvironmentName', () => {
+    it('should return the environment name from the input', () => {
+      const mockGetInput = jest
+        .spyOn(core, 'getInput')
+        .mockReturnValue('test-environment-name')
 
-    await expect(getAccessToken('my-cli-token')).rejects.toThrow(
-      'No access token found in the response'
-    )
-  })
+      const envName = getEnvironmentName()
+      expect(envName).toBe('test-environment-name')
+      expect(mockGetInput).toHaveBeenCalledWith('environment-name')
+    })
 
-  it('should throw an error if the fetch call throws an error', async () => {
-    const error = new Error('Network error')
-    global.fetch = jest.fn().mockRejectedValue(error)
+    it('should return the GITHUB_REF_NAME if no environment name is provided', () => {
+      const mockGetInput = jest.spyOn(core, 'getInput').mockReturnValue('')
+      process.env.GITHUB_REF_NAME = 'test-environment-name'
 
-    await expect(getAccessToken('my-cli-token')).rejects.toThrow(
-      'Unable to authenticate: Network error'
-    )
+      const envName = getEnvironmentName()
+      expect(envName).toBe('test-environment-name')
+      expect(mockGetInput).toHaveBeenCalledWith('environment-name')
+    })
+
+    it('should return blank if no environment name is provided and GITHUB_REF_NAME is not set', () => {
+      const mockGetInput = jest.spyOn(core, 'getInput').mockReturnValue('')
+      delete process.env.GITHUB_REF_NAME
+
+      const envName = getEnvironmentName()
+      expect(envName).toBe('')
+      expect(mockGetInput).toHaveBeenCalledWith('environment-name')
+    })
   })
 })

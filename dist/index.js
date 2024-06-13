@@ -30727,6 +30727,7 @@ async function outputEnvironmentUrl() {
         url = urls[0];
     }
     core.setOutput('deployed-url', url);
+    core.info(`Environment URL is ${url}`);
     core.endGroup();
 }
 exports.outputEnvironmentUrl = outputEnvironmentUrl;

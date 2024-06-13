@@ -35,7 +35,9 @@ The name of the Platform.sh instance on which to act. Default: The current branc
 
 ## Outputs
 
-No outputs.
+### `deployed-url`
+
+The enviroment URL from platform.sh after successfull deployment.
 
 ## Example Usage
 

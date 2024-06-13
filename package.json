@@ -1,7 +1,6 @@
 {
   "name": "platformsh-action",
   "description": "platform.sh action with deploy and clean environment feature",
-  "version": "1.0.0",
   "author": "zeshanziya",
   "homepage": "https://github.com/axelerant/platformsh-action",
   "repository": {

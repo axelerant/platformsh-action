@@ -55,7 +55,7 @@ describe('utils', () => {
       jest.spyOn(global, 'fetch').mockResolvedValue({
         ok: true,
         json: jest.fn().mockResolvedValue({})
-      } as any as Response)
+      } as unknown as Response)
 
       await expect(getAccessToken('test-cli-token')).rejects.toThrow(
         'No access token found in the response'
@@ -64,9 +64,7 @@ describe('utils', () => {
 
     it('should throw an error if there is an error during the fetch', async () => {
       // Mock fetch to throw an error
-      const mockFetch = jest
-        .spyOn(global, 'fetch')
-        .mockRejectedValue(new Error('Network error'))
+      jest.spyOn(global, 'fetch').mockRejectedValue(new Error('Network error'))
 
       await expect(getAccessToken('test-cli-token')).rejects.toThrow(
         'Unable to authenticate: Network error'
@@ -75,9 +73,7 @@ describe('utils', () => {
 
     it('should throw an error if something goes wrong', async () => {
       // Mock fetch to throw an error
-      const mockFetch = jest
-        .spyOn(global, 'fetch')
-        .mockRejectedValue('Something went wrong')
+      jest.spyOn(global, 'fetch').mockRejectedValue('Something went wrong')
 
       await expect(getAccessToken('test-cli-token')).rejects.toThrow(
         'Unable to authenticate: Something went wrong'

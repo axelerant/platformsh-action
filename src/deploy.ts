@@ -6,7 +6,7 @@ import { getEnvironmentName } from './utils'
 export async function deploy(): Promise<number> {
   core.startGroup('Deploy to Platform.sh')
 
-  let envName = getEnvironmentName()
+  const envName = getEnvironmentName()
 
   const env = {
     ...process.env,

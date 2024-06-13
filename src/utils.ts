@@ -49,7 +49,7 @@ export const getCliClient = async (cliToken: string): Promise<Client> => {
   })
 }
 
-export const getEnvironmentName = () => {
+export const getEnvironmentName = (): string => {
   let envName = core.getInput('environment-name')
   if (!envName) {
     const { GITHUB_REF_NAME } = process.env

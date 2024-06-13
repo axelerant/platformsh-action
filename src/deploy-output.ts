@@ -20,4 +20,3 @@ export async function deployOutput(): Promise<void> {
   core.setOutput('deployed-url', url)
   core.endGroup()
 }
-

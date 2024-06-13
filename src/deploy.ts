@@ -1,17 +1,12 @@
 import * as core from '@actions/core'
 import { exec } from '@actions/exec'
 import appRootPath from 'app-root-path'
+import { getEnvironmentName } from './utils'
 
 export async function deploy(): Promise<number> {
   core.startGroup('Deploy to Platform.sh')
 
-  let envName = core.getInput('environment-name');
-  if (!envName) {
-    const { GITHUB_REF_NAME } = process.env
-    if (GITHUB_REF_NAME) {
-      envName = GITHUB_REF_NAME
-    }
-  }
+  let envName = getEnvironmentName()
 
   const env = {
     ...process.env,
@@ -24,5 +19,5 @@ export async function deploy(): Promise<number> {
   }
   const exitCode = await exec(`${appRootPath}/scripts/deploy.sh`, [], { env })
   core.endGroup()
-  return exitCode;
+  return exitCode
 }

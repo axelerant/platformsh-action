@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
-import Client from 'platformsh-client'
-import { getAccessToken } from './utils'
+import { getCliClient } from './utils'
 import * as github from '@actions/github'
 
 export async function cleanPrEnv(): Promise<void> {
@@ -15,12 +14,7 @@ export async function cleanPrEnv(): Promise<void> {
     return
   }
 
-  const accessToken = await getAccessToken(core.getInput('cli-token'))
-  const client = new Client({
-    access_token: accessToken,
-    api_url: 'https://api.platform.sh/api',
-    authorization: ''
-  })
+  const client = await getCliClient(core.getInput('cli-token'))
 
   // Get env details
   const prRef = `${prNumber}/merge`

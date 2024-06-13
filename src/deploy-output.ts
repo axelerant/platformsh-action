@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { getCliClient, getEnvironmentName } from './utils'
 
-export async function deployOutput(): Promise<void> {
+export async function outputEnvironmentUrl(): Promise<void> {
   core.startGroup('Output deployed URL')
 
   const client = await getCliClient(core.getInput('cli-token'))

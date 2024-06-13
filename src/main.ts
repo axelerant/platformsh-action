@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { deploy } from './deploy'
 import { installCli } from './install-cli'
 import { cleanPrEnv } from './clean-pr-env'
-import { deployOutput } from './deploy-output'
+import { outputEnvironmentUrl } from './deploy-output'
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -19,7 +19,7 @@ export async function run(): Promise<void> {
     const exitCode = await deploy()
     // fetch and set the output url
     if (exitCode === 0) {
-      deployOutput()
+      outputEnvironmentUrl()
     }
     return
   }

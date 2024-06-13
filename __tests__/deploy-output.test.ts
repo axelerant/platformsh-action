@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { deployOutput } from './../src/deploy-output'
+import { outputEnvironmentUrl } from './../src/deploy-output'
 
 const mockEnvResult = {
   getRouteUrls: jest.fn()
@@ -44,7 +44,7 @@ describe('deploy', () => {
       'https://example.com'
     ])
 
-    await deployOutput()
+    await outputEnvironmentUrl()
 
     expect(outputMock).toHaveBeenCalledWith(
       'deployed-url',
@@ -55,7 +55,7 @@ describe('deploy', () => {
   it('should output http url if https not present', async () => {
     mockEnvResult.getRouteUrls.mockReturnValue(['http://example.com'])
 
-    await deployOutput()
+    await outputEnvironmentUrl()
 
     expect(outputMock).toHaveBeenCalledWith(
       'deployed-url',

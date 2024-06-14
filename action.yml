@@ -4,7 +4,7 @@ description: 'Perform action on platform.sh projects'
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: 'server'
-  color: 'black'
+  color: 'gray-dark'
 
 # Define your inputs here.
 inputs:

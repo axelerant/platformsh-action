@@ -1,21 +1,18 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
-  "version": "0.0.0",
-  "author": "",
-  "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "name": "platformsh-action",
+  "description": "platform.sh action with deploy and clean environment feature",
+  "author": "zeshanziya",
+  "homepage": "https://github.com/axelerant/platformsh-action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/axelerant/platformsh-action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/axelerant/platformsh-action/issues"
   },
   "keywords": [
-    "actions",
-    "node",
-    "setup"
+    "platform.sh",
+    "deploy"
   ],
   "exports": {
     ".": "./dist/index.js"

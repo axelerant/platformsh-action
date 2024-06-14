@@ -30649,10 +30649,10 @@ const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(1314);
 const github = __importStar(__nccwpck_require__(5438));
 async function cleanPrEnv() {
-    core.startGroup('Cleanr PR env from Platform.sh');
+    core.startGroup('Remove PR env from Platform.sh');
     const prNumber = github.context.payload.pull_request?.number;
     if (!prNumber) {
-        core.warning(`Unable to identify PR No. Please make sure this action runs only on PR close`);
+        core.warning(`Unable to identify the PR. Please run this action only on pull_request closed event.`);
         core.endGroup();
         return;
     }
@@ -30660,10 +30660,9 @@ async function cleanPrEnv() {
     // Get env details
     const prRef = `${prNumber}/merge`;
     const envResult = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(prRef));
-    core.info(`Environment type is ${envResult.type}`);
-    core.info(`Environment name is ${envResult.name}`);
+    core.info(`Environment '${envResult.name}' is of type '${envResult.type}'.`);
     if (envResult.type !== 'development') {
-        core.info(`Skipping ${prRef} environment deletion as it's not a development environment`);
+        core.info(`Not deleting ${prRef} environment as it's not a development environment`);
         core.endGroup();
         return;
     }
@@ -30676,7 +30675,7 @@ async function cleanPrEnv() {
     // Fetch again for deletion as active env can not be deleted and current resource points to active env.
     const envResultDelete = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(prRef));
     await envResultDelete.delete();
-    core.info(`${prRef} environment deleted successfully`);
+    core.info(`${prRef} environment deleted successfully.`);
     core.endGroup();
 }
 exports.cleanPrEnv = cleanPrEnv;

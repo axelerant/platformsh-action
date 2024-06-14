@@ -3,12 +3,12 @@ import { getCliClient } from './utils'
 import * as github from '@actions/github'
 
 export async function cleanPrEnv(): Promise<void> {
-  core.startGroup('Cleanr PR env from Platform.sh')
+  core.startGroup('Remove PR env from Platform.sh')
 
   const prNumber = github.context.payload.pull_request?.number
   if (!prNumber) {
     core.warning(
-      `Unable to identify PR No. Please make sure this action runs only on PR close`
+      `Unable to identify the PR. Please run this action only on pull_request closed event.`
     )
     core.endGroup()
     return
@@ -23,12 +23,11 @@ export async function cleanPrEnv(): Promise<void> {
     encodeURIComponent(prRef)
   )
 
-  core.info(`Environment type is ${envResult.type}`)
-  core.info(`Environment name is ${envResult.name}`)
-
+  core.info(`Environment '${envResult.name}' is of type '${envResult.type}'.`)
+  
   if (envResult.type !== 'development') {
     core.info(
-      `Skipping ${prRef} environment deletion as it's not a development environment`
+      `Not deleting ${prRef} environment as it's not a development environment`
     )
     core.endGroup()
     return
@@ -47,6 +46,6 @@ export async function cleanPrEnv(): Promise<void> {
     encodeURIComponent(prRef)
   )
   await envResultDelete.delete()
-  core.info(`${prRef} environment deleted successfully`)
+  core.info(`${prRef} environment deleted successfully.`)
   core.endGroup()
 }

@@ -19,10 +19,10 @@ describe('cleanPrEnv', () => {
     await cleanPrEnv()
 
     expect(core.startGroup).toHaveBeenCalledWith(
-      'Cleanr PR env from Platform.sh'
+      'Remove PR env from Platform.sh'
     )
     expect(core.warning).toHaveBeenCalledWith(
-      `Unable to identify PR No. Please make sure this action runs only on PR close`
+      `Unable to identify the PR. Please run this action only on pull_request closed event.`
     )
     expect(getAccessToken).not.toHaveBeenCalled()
     expect(Client).not.toHaveBeenCalled()

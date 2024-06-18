@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import { getCliClient } from './utils'
 import * as github from '@actions/github'
+import Environment from 'platformsh-client/types/model/Environment'
 
 export async function cleanPrEnv(): Promise<void> {
   core.startGroup('Remove PR env from Platform.sh')
@@ -18,15 +19,25 @@ export async function cleanPrEnv(): Promise<void> {
 
   // Get env details
   const prRef = `${prNumber}/merge`
-  const envResult = await client.getEnvironment(
-    core.getInput('project-id'),
-    encodeURIComponent(prRef)
-  )
+  let envResult
+  try {
+    envResult = await client.getEnvironment(
+      core.getInput('project-id'),
+      encodeURIComponent(prRef)
+    )
+  } catch (error) {
+    core.warning(String(error))
+  }
 
+  if (!envResult) {
+    core.warning(`No active environment found for the given PR ${prRef}`)
+    core.endGroup()
+    return
+  }
   core.info(`Environment '${envResult.name}' is of type '${envResult.type}'.`)
-  
+
   if (envResult.type !== 'development') {
-    core.info(
+    core.warning(
       `Not deleting ${prRef} environment as it's not a development environment`
     )
     core.endGroup()

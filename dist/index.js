@@ -30659,10 +30659,23 @@ async function cleanPrEnv() {
     const client = await (0, utils_1.getCliClient)(core.getInput('cli-token'));
     // Get env details
     const prRef = `${prNumber}/merge`;
-    const envResult = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(prRef));
+    let envResult;
+    try {
+        envResult = await client.getEnvironment(core.getInput('project-id'), encodeURIComponent(prRef));
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.warning(error.message);
+        }
+    }
+    if (!envResult) {
+        core.warning(`No active environment found for the given PR ${prRef}`);
+        core.endGroup();
+        return;
+    }
     core.info(`Environment '${envResult.name}' is of type '${envResult.type}'.`);
     if (envResult.type !== 'development') {
-        core.info(`Not deleting ${prRef} environment as it's not a development environment`);
+        core.warning(`Not deleting ${prRef} environment as it's not a development environment`);
         core.endGroup();
         return;
     }

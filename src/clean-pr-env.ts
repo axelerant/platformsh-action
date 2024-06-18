@@ -26,7 +26,9 @@ export async function cleanPrEnv(): Promise<void> {
       encodeURIComponent(prRef)
     )
   } catch (error) {
-    core.warning(String(error))
+    if (error instanceof Error) {
+      core.warning(error.message)
+    }
   }
 
   if (!envResult) {

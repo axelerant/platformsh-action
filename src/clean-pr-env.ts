@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import { getCliClient } from './utils'
 import * as github from '@actions/github'
-import Environment from 'platformsh-client/types/model/Environment'
 
 export async function cleanPrEnv(): Promise<void> {
   core.startGroup('Remove PR env from Platform.sh')

@@ -69,7 +69,7 @@
     "@actions/github": "^6.0.0",
     "app-root-path": "^3.1.0",
     "copyfiles": "^2.4.1",
-    "platformsh-client": "^0.2.4"
+    "platformsh-client": "^0.2.9"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

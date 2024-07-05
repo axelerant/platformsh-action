@@ -60,7 +60,7 @@ export async function cleanPrEnv(): Promise<void> {
     )
     await envResultDelete.delete()
     core.info(`${prRef} environment deleted successfully.`)
-  } else if (envResult.status == 'inactive') {
+  } else if (envResult.status === 'inactive') {
     // Delete the environment directly if it's inactive.
     await envResult.delete()
     core.info(`${prRef} environment deleted successfully.`)

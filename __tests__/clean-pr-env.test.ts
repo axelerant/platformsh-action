@@ -6,17 +6,15 @@ const mockClient = {
   getEnvironment: jest.fn()
 }
 
-
-const mockEnvironmentResult = (
-  status: string,
-  type: string = 'development'
-) => ({
-  name: '123/merge',
-  type,
-  status,
-  deactivate: jest.fn().mockResolvedValue({ wait: jest.fn() }),
-  delete: jest.fn().mockResolvedValue({})
-})
+const mockEnvironmentResult = jest
+  .fn()
+  .mockImplementation((status: string, type = 'development') => ({
+    name: '123/merge',
+    type,
+    status,
+    deactivate: jest.fn().mockResolvedValue({ wait: jest.fn() }),
+    delete: jest.fn().mockResolvedValue({})
+  }))
 
 jest.mock('@actions/core')
 jest.mock('../src/utils', () => ({

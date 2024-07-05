@@ -45,19 +45,30 @@ export async function cleanPrEnv(): Promise<void> {
     return
   }
 
-  // Deactivate env first.
-  const activity = await envResult.deactivate()
-  core.info(`Deactivating ${prRef} environment...`)
-  // @todo display activity log
-  await activity.wait()
-  core.info(`${prRef} environment deactivated successfully.`)
+  // Check the status of the environment.
+  if (envResult.status === 'active' || envResult.status === 'paused') {
+    const activity = await envResult.deactivate()
+    core.info(`Deactivating ${prRef} environment...`)
+    // @todo display activity log
+    await activity.wait()
+    core.info(`${prRef} environment deactivated successfully.`)
 
-  // Fetch again for deletion as active env can not be deleted and current resource points to active env.
-  const envResultDelete = await client.getEnvironment(
-    core.getInput('project-id'),
-    encodeURIComponent(prRef)
-  )
-  await envResultDelete.delete()
-  core.info(`${prRef} environment deleted successfully.`)
+    // Fetch again for deletion as active env can not be deleted and current resource points to active env.
+    const envResultDelete = await client.getEnvironment(
+      core.getInput('project-id'),
+      encodeURIComponent(prRef)
+    )
+    await envResultDelete.delete()
+    core.info(`${prRef} environment deleted successfully.`)
+  } else if (envResult.status == 'inactive') {
+    // Delete the environment directly if it's inactive.
+    await envResult.delete()
+    core.info(`${prRef} environment deleted successfully.`)
+  } else {
+    // Handle dirty and deleting state.
+    core.warning(
+      `Unable to delete ${prRef} environment as it's already in ${envResult.status} mode`
+    )
+  }
   core.endGroup()
 }

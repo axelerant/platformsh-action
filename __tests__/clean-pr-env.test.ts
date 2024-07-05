@@ -6,6 +6,18 @@ const mockClient = {
   getEnvironment: jest.fn()
 }
 
+
+const mockEnvironmentResult = (
+  status: string,
+  type: string = 'development'
+) => ({
+  name: '123/merge',
+  type,
+  status,
+  deactivate: jest.fn().mockResolvedValue({ wait: jest.fn() }),
+  delete: jest.fn().mockResolvedValue({})
+})
+
 jest.mock('@actions/core')
 jest.mock('../src/utils', () => ({
   getCliClient: jest.fn().mockImplementation(() => mockClient)
@@ -44,15 +56,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should deactivate and delete an active environment', async () => {
-    const mockEnvResult = {
-      name: 'test-env',
-      type: 'development',
-      status: 'active',
-      deactivate: jest
-        .fn()
-        .mockResolvedValue({ wait: jest.fn().mockImplementation() }),
-      delete: jest.fn().mockImplementation()
-    }
+    const mockEnvResult = mockEnvironmentResult('active')
     mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
@@ -74,15 +78,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should delete an inactive environment', async () => {
-    const mockEnvResult = {
-      name: 'test-env',
-      type: 'development',
-      status: 'inactive',
-      deactivate: jest
-        .fn()
-        .mockResolvedValue({ wait: jest.fn().mockImplementation() }),
-      delete: jest.fn().mockImplementation()
-    }
+    const mockEnvResult = mockEnvironmentResult('inactive')
     mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
@@ -101,15 +97,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should warn and not delete non-development environment', async () => {
-    const mockEnvResult = {
-      name: 'test-env',
-      type: 'production',
-      status: 'active',
-      deactivate: jest
-        .fn()
-        .mockResolvedValue({ wait: jest.fn().mockImplementation() }),
-      delete: jest.fn().mockImplementation()
-    }
+    const mockEnvResult = mockEnvironmentResult('active', 'production')
     mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
@@ -128,15 +116,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should handle unexpected environment status', async () => {
-    const mockEnvResult = {
-      name: 'test-env',
-      type: 'development',
-      status: 'dirty',
-      deactivate: jest
-        .fn()
-        .mockResolvedValue({ wait: jest.fn().mockImplementation() }),
-      delete: jest.fn().mockImplementation()
-    }
+    const mockEnvResult = mockEnvironmentResult('dirty')
     mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 

@@ -30644,7 +30644,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cleanPrEnv = void 0;
+exports.cleanPrEnv = cleanPrEnv;
 const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(1314);
 const github = __importStar(__nccwpck_require__(5438));
@@ -30691,7 +30691,6 @@ async function cleanPrEnv() {
     core.info(`${prRef} environment deleted successfully.`);
     core.endGroup();
 }
-exports.cleanPrEnv = cleanPrEnv;
 
 
 /***/ }),
@@ -30725,7 +30724,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.outputEnvironmentUrl = void 0;
+exports.outputEnvironmentUrl = outputEnvironmentUrl;
 const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(1314);
 async function outputEnvironmentUrl() {
@@ -30742,7 +30741,6 @@ async function outputEnvironmentUrl() {
     core.info(`Environment URL is ${url}`);
     core.endGroup();
 }
-exports.outputEnvironmentUrl = outputEnvironmentUrl;
 
 
 /***/ }),
@@ -30779,7 +30777,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.deploy = void 0;
+exports.deploy = deploy;
 const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
 const app_root_path_1 = __importDefault(__nccwpck_require__(4808));
@@ -30800,7 +30798,6 @@ async function deploy() {
     core.endGroup();
     return exitCode;
 }
-exports.deploy = deploy;
 
 
 /***/ }),
@@ -30881,7 +30878,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.installCli = void 0;
+exports.installCli = installCli;
 const core = __importStar(__nccwpck_require__(2186));
 const exec_1 = __nccwpck_require__(1514);
 const app_root_path_1 = __importDefault(__nccwpck_require__(4808));
@@ -30895,7 +30892,6 @@ async function installCli() {
     await (0, exec_1.exec)(`${app_root_path_1.default}/scripts/install-cli.sh`, [], options);
     core.endGroup();
 }
-exports.installCli = installCli;
 
 
 /***/ }),
@@ -30929,7 +30925,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.run = run;
 const core = __importStar(__nccwpck_require__(2186));
 const deploy_1 = __nccwpck_require__(5930);
 const install_cli_1 = __nccwpck_require__(5367);
@@ -30959,7 +30955,6 @@ async function run() {
         await (0, clean_pr_env_1.cleanPrEnv)();
     }
 }
-exports.run = run;
 
 
 /***/ }),

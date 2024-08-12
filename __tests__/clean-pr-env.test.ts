@@ -114,7 +114,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should handle unexpected environment status', async () => {
-    const mockEnvResult = mockEnvironmentResult('dirty')
+    const mockEnvResult = mockEnvironmentResult('deleting')
     mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
@@ -127,7 +127,7 @@ describe('cleanPrEnv', () => {
     expect(mockEnvResult.deactivate).not.toHaveBeenCalled()
     expect(mockEnvResult.delete).not.toHaveBeenCalled()
     expect(core.warning).toHaveBeenCalledWith(
-      `Unable to delete 123/merge environment as it's already in dirty mode`
+      `Unable to delete 123/merge environment as it's already in deleting mode`
     )
     expect(core.endGroup).toHaveBeenCalled()
   })

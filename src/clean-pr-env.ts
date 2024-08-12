@@ -46,7 +46,11 @@ export async function cleanPrEnv(): Promise<void> {
   }
 
   // Check the status of the environment.
-  if (envResult.status === 'active' || envResult.status === 'paused') {
+  if (
+    envResult.status === 'active' ||
+    envResult.status === 'paused' ||
+    envResult.status === 'dirty'
+  ) {
     const activity = await envResult.deactivate()
     core.info(`Deactivating ${prRef} environment...`)
     // @todo display activity log

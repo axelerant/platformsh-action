@@ -33,6 +33,10 @@ An option to force push changes to the project repository on Platform.sh. Use wi
 
 The name of the Platform.sh instance on which to act. Default: The current branch name.
 
+### `parent-environment-name`
+
+The name of the Platform.sh instance on which to branch from.
+
 ## Outputs
 
 ### `deployed-url`

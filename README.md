@@ -35,7 +35,7 @@ The name of the Platform.sh instance on which to act. Default: The current branc
 
 ### `parent-environment-name`
 
-The name of the Platform.sh instance on which to branch from.
+The name of the Platform.sh instance to branch from.
 
 ## Outputs
 

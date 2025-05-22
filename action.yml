@@ -31,6 +31,9 @@ inputs:
   environment-name:
     description: 'Name of the platform.sh instance'
     required: false
+  parent-environment-name:
+    description: 'Name of the platform.sh instance to branch from'
+    required: false
 # Define your outputs here.
 outputs:
   deployed-url:

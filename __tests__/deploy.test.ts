@@ -29,6 +29,8 @@ describe('deploy', () => {
           return 'false'
         case 'environment-name':
           return 'environment-name'
+        case 'parent-environment-name':
+          return 'parent-environment-name'
         default:
           return ''
       }
@@ -44,6 +46,7 @@ describe('deploy', () => {
         PLATFORM_PROJECT_ID: 'project-id',
         PLATFORMSH_CLI_TOKEN: 'cli-token',
         FORCE_PUSH: 'false',
+        PARENT_ENVIRONMENT_NAME: 'parent-environment-name',
         ENVIRONMENT_NAME: 'environment-name',
         KNOWN_HOSTS_PATH: `${appRootPath}/known_hosts`
       }

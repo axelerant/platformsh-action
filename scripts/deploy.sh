@@ -16,4 +16,7 @@ PLATFORM_OPTS="-vv --activate --target $ENVIRONMENT_NAME"
 if [[ -n "$FORCE_PUSH" ]]; then
   PLATFORM_OPTS="$PLATFORM_OPTS --force"
 fi
+if [[ -n "$PARENT_ENVIRONMENT_NAME" ]]; then
+  PLATFORM_OPTS="$PLATFORM_OPTS --parent $PARENT_ENVIRONMENT_NAME"
+fi
 platform push ${PLATFORM_OPTS}

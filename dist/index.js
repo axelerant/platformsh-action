@@ -30804,6 +30804,7 @@ async function deploy() {
         PLATFORM_PROJECT_ID: core.getInput('project-id'),
         PLATFORMSH_CLI_TOKEN: core.getInput('cli-token'),
         FORCE_PUSH: core.getInput('force-push'),
+        PARENT_ENVIRONMENT_NAME: core.getInput('parent-environment-name'),
         ENVIRONMENT_NAME: envName,
         KNOWN_HOSTS_PATH: `${app_root_path_1.default}/known_hosts`
     };

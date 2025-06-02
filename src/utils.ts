@@ -23,7 +23,7 @@ export const getAccessToken = async (cliToken: string): Promise<string> => {
       throw new Error(`Unable to authenticate: ${response.status}`)
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as { access_token?: string }
 
     // Assuming the response data contains an access_token field
     if (!data.access_token) {

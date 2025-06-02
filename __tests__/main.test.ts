@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals'
+
 import * as core from '@actions/core'
 import { run } from '../src/main'
 import { deploy } from '../src/deploy'
@@ -14,7 +16,7 @@ let getInputMock: jest.SpiedFunction<typeof core.getInput>
 describe('main', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
+    getInputMock = jest.spyOn(core, 'getInput').mockImplementation(() => '')
   })
 
   it('should call the deploy function when the action is deploy', async () => {

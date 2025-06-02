@@ -1,20 +1,22 @@
+import { jest } from '@jest/globals'
+
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { cleanPrEnv } from './../src/clean-pr-env'
 
 const mockClient = {
-  getEnvironment: jest.fn()
+  getEnvironment: jest.fn(() => Promise.resolve({}))
 }
 
-const mockEnvironmentResult = jest
-  .fn()
-  .mockImplementation((status: string, type = 'development') => ({
+const mockEnvironmentResult = jest.fn(
+  (status: string, type = 'development') => ({
     name: '123/merge',
     type,
     status,
-    deactivate: jest.fn().mockResolvedValue({ wait: jest.fn() }),
-    delete: jest.fn().mockResolvedValue({})
-  }))
+    deactivate: jest.fn(() => Promise.resolve({ wait: jest.fn() })),
+    delete: jest.fn(() => Promise.resolve({}))
+  })
+)
 
 jest.mock('@actions/core')
 jest.mock('../src/utils', () => ({
@@ -27,7 +29,7 @@ describe('cleanPrEnv', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
+    getInputMock = jest.spyOn(core, 'getInput')
     getInputMock.mockImplementation(name => {
       switch (name) {
         case 'project-id':

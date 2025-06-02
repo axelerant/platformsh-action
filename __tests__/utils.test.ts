@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals'
+
 import {
   getAccessToken,
   getCliClient,
@@ -13,9 +15,13 @@ describe('utils', () => {
       // Mock fetch to return a successful response
       const mockResponse = {
         ok: true,
-        json: jest.fn().mockResolvedValue({ access_token: 'my-access-token' })
+        json: jest.fn(() =>
+          Promise.resolve({ access_token: 'my-access-token' })
+        )
       }
-      global.fetch = jest.fn().mockResolvedValue(mockResponse)
+      global.fetch = jest.fn(() =>
+        Promise.resolve(mockResponse)
+      ) as unknown as typeof fetch
       const basicAuth = Buffer.from('platform-cli:', 'latin1').toString(
         'base64'
       )
@@ -54,7 +60,7 @@ describe('utils', () => {
       // Mock fetch to return a response without an access token
       jest.spyOn(global, 'fetch').mockResolvedValue({
         ok: true,
-        json: jest.fn().mockResolvedValue({})
+        json: jest.fn(() => Promise.resolve({}))
       } as unknown as Response)
 
       await expect(getAccessToken('test-cli-token')).rejects.toThrow(

@@ -1,22 +1,24 @@
-import * as core from '@actions/core'
-import * as exec from '@actions/exec'
-import { installCli } from '../src/install-cli'
+import { jest } from '@jest/globals'
+import * as core from '../__fixtures__/core'
+import * as exec from '../__fixtures__/exec'
+
+// Mocks should be declared before the module being tested is imported.
+jest.unstable_mockModule('@actions/core', () => core)
+jest.unstable_mockModule('@actions/exec', () => exec)
+
+// The module being tested should be imported dynamically. This ensures that the
+// mocks are used in place of any actual dependencies.
+const { installCli } = await import('../src/install-cli')
+
 import appRootPath from 'app-root-path'
-
-jest.mock('@actions/core')
-jest.mock('@actions/exec')
-
-// Mock the GitHub Actions core library
-let getInputMock: jest.SpiedFunction<typeof core.getInput>
 
 describe('installCli', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
   })
 
   it('should install the latest CLI version by default', async () => {
-    getInputMock.mockImplementation(name => {
+    core.getInput.mockImplementation(name => {
       switch (name) {
         case 'cli-version':
           return 'latest'
@@ -34,7 +36,7 @@ describe('installCli', () => {
   })
 
   it('should install a specific CLI version', async () => {
-    getInputMock.mockImplementation(name => {
+    core.getInput.mockImplementation(name => {
       switch (name) {
         case 'cli-version':
           return '1.2.3'

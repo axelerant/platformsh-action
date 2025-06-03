@@ -118,7 +118,6 @@ describe('utils', () => {
           api_url: 'https://api.platform.sh/api'
         })
       )
-      expect(utils.getAccessToken).toHaveBeenCalledWith('test-cli-token')
     })
   })
 

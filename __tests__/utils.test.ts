@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/core.js'
+import * as core from '../__fixtures__/core'
 
 // Mocks should be declared before the module being tested is imported.
 jest.unstable_mockModule('@actions/core', () => core)

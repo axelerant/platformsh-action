@@ -6,10 +6,10 @@
  * so that the actual '@actions/core' module is not imported.
  */
 import { jest } from '@jest/globals'
-import * as core from '../__fixtures__/core.js'
-import { deploy } from '../__fixtures__/deploy.js'
-import { installCli } from '../__fixtures__/install-cli.js'
-import { cleanPrEnv } from '../__fixtures__/clean-pr-env.js'
+import * as core from '../__fixtures__/core'
+import { deploy } from '../__fixtures__/deploy'
+import { installCli } from '../__fixtures__/install-cli'
+import { cleanPrEnv } from '../__fixtures__/clean-pr-env'
 
 // Mocks should be declared before the module being tested is imported.
 jest.unstable_mockModule('@actions/core', () => core)

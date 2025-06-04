@@ -3,8 +3,6 @@ import * as core from '../__fixtures__/core'
 import * as github from '../__fixtures__/github'
 import * as utils from '../__fixtures__/utils'
 
-jest.mock('@actions/github')
-
 // Mocks should be declared before the module being tested is imported.
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/github', () => github)

@@ -29,11 +29,11 @@ const getEnvironmentMock = jest
     Promise.resolve(getTestEnvironment('active', '123/merge', 'development'))
   )
 
-const mockClient = {
-  getEnvironment: getEnvironmentMock
-} as unknown as Client
-
-utils.getCliClient.mockImplementation(() => Promise.resolve(mockClient))
+utils.getCliClient.mockImplementation(() =>
+  Promise.resolve({
+    getEnvironment: getEnvironmentMock
+  } as unknown as Client)
+)
 
 // The module being tested should be imported dynamically. This ensures that the
 // mocks are used in place of any actual dependencies.
@@ -103,7 +103,11 @@ describe('cleanPrEnv', () => {
   })
 
   it('should warn and not delete non-development environment', async () => {
-    const mockEnvResult = getTestEnvironment('active', '123/merge', 'production')
+    const mockEnvResult = getTestEnvironment(
+      'active',
+      '123/merge',
+      'production'
+    )
     getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 

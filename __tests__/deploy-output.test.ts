@@ -11,12 +11,12 @@ const mockEnvResult = {
   getRouteUrls: jest.fn()
 }
 
-const mockClient = {
-  getEnvironment: jest.fn().mockImplementation(() => mockEnvResult)
-} as unknown as Client
-
 utils.getEnvironmentName.mockReturnValue('environment-name')
-utils.getCliClient.mockImplementation(() => Promise.resolve(mockClient))
+utils.getCliClient.mockImplementation(() =>
+  Promise.resolve({
+    getEnvironment: jest.fn().mockImplementation(() => mockEnvResult)
+  } as unknown as Client)
+)
 
 // The module being tested should be imported dynamically. This ensures that the
 // mocks are used in place of any actual dependencies.

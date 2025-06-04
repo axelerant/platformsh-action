@@ -13,6 +13,10 @@ permissions:
   packages: read
   statuses: write
 
+concurrency:
+  group: linter-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint Codebase

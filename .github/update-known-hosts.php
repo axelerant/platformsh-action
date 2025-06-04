@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:disable PSR1.Files.SideEffects
+
 declare(strict_types=1);
 
 namespace Platformsh\Scripts;
@@ -45,7 +47,7 @@ foreach ($regions['regions'] as $region) {
     $domains[] = $domain;
 }
 
-sortDomains($domains);
+\usort($domains, 'Platformsh\Scripts\compareDomains');
 
 $known_hosts = [];
 
@@ -97,14 +99,6 @@ function run(string $cmd): string
 }
 
 /**
- * Sorts a list of region domains.
- */
-function sortDomains(array &$regions): bool
-{
-    return \usort($regions, 'Platformsh\Scripts\compareDomains');
-}
-
-/**
  * Compares region domains for natural sorting.
  */
 function compareDomains(string $regionA, string $regionB): int
@@ -112,7 +106,7 @@ function compareDomains(string $regionA, string $regionB): int
     if (\strpos($regionA, '.') > 0 && \strpos($regionB, '.') > 0) {
         $partsA = \explode('.', $regionA, 2);
         $partsB = \explode('.', $regionB, 2);
-        assert(\count($partsA) === 2 && \count($partsB) === 2, 'Both domains should have a subdomain and a top-level domain');
+        assert(\count($partsA) === 2 && \count($partsB) === 2);
         return (\strnatcasecmp($partsA[1], $partsB[1]) * 10) + \strnatcasecmp($partsA[0], $partsB[0]);
     }
     return \strnatcasecmp($regionA, $regionB);

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Platformsh\Scripts;
 
@@ -55,8 +57,7 @@ foreach ($domains as $domain) {
         log(\sprintf("%02d/%02d Scanning %s%s", $i, $count, $prefix, $domain));
         if ($output = run('ssh-keyscan ' . \escapeshellarg($prefix . $domain) . ' 2>/dev/null')) {
             $known_hosts[] = trim($output);
-        }
-        elseif (isset($existing_known_hosts[$prefix . $domain])) {
+        } elseif (isset($existing_known_hosts[$prefix . $domain])) {
             // Use the existing record as fallback if ssh-keyscan fails.
             $known_hosts[] = $existing_known_hosts[$prefix . $domain];
         }

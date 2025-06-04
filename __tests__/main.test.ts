@@ -1,24 +1,33 @@
-import * as core from '@actions/core'
-import { run } from '../src/main'
-import { deploy } from '../src/deploy'
-import { installCli } from '../src/install-cli'
-import { cleanPrEnv } from '../src/clean-pr-env'
+/**
+ * Unit tests for the action's main functionality, src/main.ts
+ *
+ * To mock dependencies in ESM, you can create fixtures that export mock
+ * functions and objects. For example, the core module is mocked in this test,
+ * so that the actual '@actions/core' module is not imported.
+ */
+import { jest } from '@jest/globals'
+import * as core from '../__fixtures__/core'
+import { deploy } from '../__fixtures__/deploy'
+import { installCli } from '../__fixtures__/install-cli'
+import { cleanPrEnv } from '../__fixtures__/clean-pr-env'
 
-jest.mock('@actions/core')
-jest.mock('../src/deploy')
-jest.mock('../src/install-cli')
-jest.mock('../src/clean-pr-env')
+// Mocks should be declared before the module being tested is imported.
+jest.unstable_mockModule('@actions/core', () => core)
+jest.unstable_mockModule('../src/deploy', () => ({ deploy }))
+jest.unstable_mockModule('../src/install-cli', () => ({ installCli }))
+jest.unstable_mockModule('../src/clean-pr-env', () => ({ cleanPrEnv }))
 
-let getInputMock: jest.SpiedFunction<typeof core.getInput>
+// The module being tested should be imported dynamically. This ensures that the
+// mocks are used in place of any actual dependencies.
+const { run } = await import('../src/main.js')
 
 describe('main', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
   })
 
   it('should call the deploy function when the action is deploy', async () => {
-    getInputMock.mockImplementation(name => {
+    core.getInput.mockImplementation(name => {
       switch (name) {
         case 'action':
           return 'deploy'
@@ -34,7 +43,7 @@ describe('main', () => {
   })
 
   it('should call the cleanPrEnv function when the action is clean-pr-env', async () => {
-    getInputMock.mockImplementation(name => {
+    core.getInput.mockImplementation(name => {
       switch (name) {
         case 'action':
           return 'clean-pr-env'
@@ -50,7 +59,7 @@ describe('main', () => {
   })
 
   it('should throw an error if the action is invalid', async () => {
-    getInputMock.mockImplementation(name => {
+    core.getInput.mockImplementation(name => {
       switch (name) {
         case 'action':
           return 'invalid-action'

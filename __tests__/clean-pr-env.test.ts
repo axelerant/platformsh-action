@@ -35,17 +35,6 @@ const mockClient = {
 
 utils.getCliClient.mockImplementation(() => Promise.resolve(mockClient))
 
-const mockEnvironmentResult = jest.fn(
-  (status: string, type = 'development') =>
-    ({
-      name: '123/merge',
-      type,
-      status,
-      deactivate: jest.fn(() => Promise.resolve({ wait: jest.fn() })),
-      delete: jest.fn(() => Promise.resolve({}))
-    }) as unknown as Environment
-)
-
 // The module being tested should be imported dynamically. This ensures that the
 // mocks are used in place of any actual dependencies.
 const { cleanPrEnv } = await import('../src/clean-pr-env')
@@ -79,7 +68,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should deactivate and delete an active environment', async () => {
-    const mockEnvResult = mockEnvironmentResult('active')
+    const mockEnvResult = getTestEnvironment('active', '123/merge')
     getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
@@ -98,7 +87,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should delete an inactive environment', async () => {
-    const mockEnvResult = mockEnvironmentResult('inactive')
+    const mockEnvResult = getTestEnvironment('inactive', '123/merge')
     getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
@@ -114,7 +103,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should warn and not delete non-development environment', async () => {
-    const mockEnvResult = mockEnvironmentResult('active', 'production')
+    const mockEnvResult = getTestEnvironment('active', '123/merge', 'production')
     getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
@@ -130,7 +119,7 @@ describe('cleanPrEnv', () => {
   })
 
   it('should handle unexpected environment status', async () => {
-    const mockEnvResult = mockEnvironmentResult('deleting')
+    const mockEnvResult = getTestEnvironment('deleting', '123/merge')
     getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 

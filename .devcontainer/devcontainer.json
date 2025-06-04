@@ -22,9 +22,7 @@
         "yzhang.markdown-all-in-one"
       ],
       "settings": {
-        "cSpell.words": [
-            "platformsh"
-        ],
+        "cSpell.words": ["platformsh"],
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.tabSize": 2,
         "editor.formatOnSave": true,

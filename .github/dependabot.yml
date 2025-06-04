@@ -26,14 +26,14 @@ updates:
           - patch
       npm-linters:
         patterns:
-          - "*eslint*"
-          - "*prettier*"
-          - "*stylelint*"
+          - '*eslint*'
+          - '*prettier*'
+          - '*stylelint*'
       npm-rollup:
         patterns:
-          - "rollup"
-          - "rollup-*"
+          - 'rollup'
+          - 'rollup-*'
       gh-packages:
         patterns:
-          - "@actions/*"
-          - "@github/*"
+          - '@actions/*'
+          - '@github/*'

@@ -1,36 +1,61 @@
 import { jest } from '@jest/globals'
+import * as core from '../__fixtures__/core'
+import * as github from '../__fixtures__/github'
+import * as utils from '../__fixtures__/utils'
 
-import * as core from '@actions/core'
-import * as github from '@actions/github'
-import { cleanPrEnv } from './../src/clean-pr-env'
+jest.mock('@actions/github')
 
-const mockClient = {
-  getEnvironment: jest.fn(() => Promise.resolve({}))
-}
+// Mocks should be declared before the module being tested is imported.
+jest.unstable_mockModule('@actions/core', () => core)
+jest.unstable_mockModule('@actions/github', () => github)
+jest.unstable_mockModule('../src/utils', () => utils)
 
-const mockEnvironmentResult = jest.fn(
-  (status: string, type = 'development') => ({
-    name: '123/merge',
+import Client, { Environment } from 'platformsh-client'
+
+const getTestEnvironment = (
+  status: string,
+  name: string,
+  type = 'development'
+) =>
+  ({
+    name,
     type,
     status,
     deactivate: jest.fn(() => Promise.resolve({ wait: jest.fn() })),
     delete: jest.fn(() => Promise.resolve({}))
-  })
+  }) as unknown as Environment
+
+const getEnvironmentMock = jest
+  .spyOn(Client.prototype, 'getEnvironment')
+  .mockImplementation(() =>
+    Promise.resolve(getTestEnvironment('active', '123/merge', 'development'))
+  )
+
+const mockClient = {
+  getEnvironment: getEnvironmentMock
+} as unknown as Client
+
+utils.getCliClient.mockImplementation(() => Promise.resolve(mockClient))
+
+const mockEnvironmentResult = jest.fn(
+  (status: string, type = 'development') =>
+    ({
+      name: '123/merge',
+      type,
+      status,
+      deactivate: jest.fn(() => Promise.resolve({ wait: jest.fn() })),
+      delete: jest.fn(() => Promise.resolve({}))
+    }) as unknown as Environment
 )
 
-jest.mock('@actions/core')
-jest.mock('../src/utils', () => ({
-  getCliClient: jest.fn().mockImplementation(() => mockClient)
-}))
-jest.mock('@actions/github')
+// The module being tested should be imported dynamically. This ensures that the
+// mocks are used in place of any actual dependencies.
+const { cleanPrEnv } = await import('../src/clean-pr-env')
 
 describe('cleanPrEnv', () => {
-  let getInputMock: jest.SpiedFunction<typeof core.getInput>
-
   beforeEach(() => {
     jest.clearAllMocks()
-    getInputMock = jest.spyOn(core, 'getInput')
-    getInputMock.mockImplementation(name => {
+    core.getInput.mockImplementation(name => {
       switch (name) {
         case 'project-id':
           return 'project-id'
@@ -57,15 +82,12 @@ describe('cleanPrEnv', () => {
 
   it('should deactivate and delete an active environment', async () => {
     const mockEnvResult = mockEnvironmentResult('active')
-    mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
+    getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
     await cleanPrEnv()
 
-    expect(mockClient.getEnvironment).toHaveBeenCalledWith(
-      'project-id',
-      '123%2Fmerge'
-    )
+    expect(getEnvironmentMock).toHaveBeenCalledWith('project-id', '123%2Fmerge')
     expect(mockEnvResult.deactivate).toHaveBeenCalled()
     expect(core.info).toHaveBeenCalledWith(
       `Deactivating 123/merge environment...`
@@ -79,15 +101,12 @@ describe('cleanPrEnv', () => {
 
   it('should delete an inactive environment', async () => {
     const mockEnvResult = mockEnvironmentResult('inactive')
-    mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
+    getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
     await cleanPrEnv()
 
-    expect(mockClient.getEnvironment).toHaveBeenCalledWith(
-      'project-id',
-      '123%2Fmerge'
-    )
+    expect(getEnvironmentMock).toHaveBeenCalledWith('project-id', '123%2Fmerge')
     expect(mockEnvResult.deactivate).not.toHaveBeenCalled()
     expect(mockEnvResult.delete).toHaveBeenCalled()
     expect(core.info).toHaveBeenCalledWith(
@@ -98,15 +117,12 @@ describe('cleanPrEnv', () => {
 
   it('should warn and not delete non-development environment', async () => {
     const mockEnvResult = mockEnvironmentResult('active', 'production')
-    mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
+    getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
     await cleanPrEnv()
 
-    expect(mockClient.getEnvironment).toHaveBeenCalledWith(
-      'project-id',
-      '123%2Fmerge'
-    )
+    expect(getEnvironmentMock).toHaveBeenCalledWith('project-id', '123%2Fmerge')
     expect(mockEnvResult.deactivate).not.toHaveBeenCalled()
     expect(mockEnvResult.delete).not.toHaveBeenCalled()
     expect(core.warning).toHaveBeenCalledWith(
@@ -117,15 +133,12 @@ describe('cleanPrEnv', () => {
 
   it('should handle unexpected environment status', async () => {
     const mockEnvResult = mockEnvironmentResult('deleting')
-    mockClient.getEnvironment.mockResolvedValue(mockEnvResult)
+    getEnvironmentMock.mockResolvedValue(mockEnvResult)
     github.context.payload.pull_request = { number: 123 }
 
     await cleanPrEnv()
 
-    expect(mockClient.getEnvironment).toHaveBeenCalledWith(
-      'project-id',
-      '123%2Fmerge'
-    )
+    expect(getEnvironmentMock).toHaveBeenCalledWith('project-id', '123%2Fmerge')
     expect(mockEnvResult.deactivate).not.toHaveBeenCalled()
     expect(mockEnvResult.delete).not.toHaveBeenCalled()
     expect(core.warning).toHaveBeenCalledWith(
@@ -136,15 +149,12 @@ describe('cleanPrEnv', () => {
 
   it('should handle error during getEnvironment call', async () => {
     const errorMessage = 'Failed to get environment details'
-    mockClient.getEnvironment.mockRejectedValue(new Error(errorMessage))
+    getEnvironmentMock.mockRejectedValue(new Error(errorMessage))
     github.context.payload.pull_request = { number: 123 }
 
     await cleanPrEnv()
 
-    expect(mockClient.getEnvironment).toHaveBeenCalledWith(
-      'project-id',
-      '123%2Fmerge'
-    )
+    expect(getEnvironmentMock).toHaveBeenCalledWith('project-id', '123%2Fmerge')
     expect(core.warning).toHaveBeenCalledWith(errorMessage)
     expect(core.endGroup).toHaveBeenCalled()
   })

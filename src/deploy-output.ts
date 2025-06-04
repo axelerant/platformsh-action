@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { getCliClient, getEnvironmentName } from './utils'
+import { getCliClient, getEnvironmentName } from './utils.js'
 
 export async function outputEnvironmentUrl(): Promise<void> {
   core.startGroup('Output deployed URL')

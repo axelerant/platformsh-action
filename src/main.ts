@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
-import { deploy } from './deploy'
-import { installCli } from './install-cli'
-import { cleanPrEnv } from './clean-pr-env'
-import { outputEnvironmentUrl } from './deploy-output'
+import { deploy } from './deploy.js'
+import { installCli } from './install-cli.js'
+import { cleanPrEnv } from './clean-pr-env.js'
+import { outputEnvironmentUrl } from './deploy-output.js'
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.

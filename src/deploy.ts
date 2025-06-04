@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { exec } from '@actions/exec'
 import appRootPath from 'app-root-path'
-import { getEnvironmentName } from './utils'
+import { getEnvironmentName } from './utils.js'
 
 export async function deploy(): Promise<number> {
   core.startGroup('Deploy to Platform.sh')

@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
-import { getCliClient } from './utils'
 import * as github from '@actions/github'
+
+import { getCliClient } from './utils.js'
 
 export async function cleanPrEnv(): Promise<void> {
   core.startGroup('Remove PR env from Platform.sh')

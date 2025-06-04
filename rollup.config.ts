@@ -10,6 +10,7 @@ const config = {
     esModule: true,
     file: 'dist/index.js',
     format: 'es',
+    inlineDynamicImports: true,
     sourcemap: true
   },
   plugins: [typescript(), nodeResolve({ preferBuiltins: true }), commonjs()]

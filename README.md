@@ -25,7 +25,7 @@ A token to access the Platform.sh API. See instructions in the [Platform.sh docs
 
 ### `ssh-private-key` (optional)
 
-The Platform.sh CLI generates a temporary certificate for deployment. However, you may still choose to provide a private key that lets you push via git. Create a specialized key used _only_ for deployment and use GitHub secrets to keep your key safe.
+The Platform.sh CLI generates a temporary certificate for deployment. However, you may still choose to provide a private key that lets you push via Git. Create a specialized key used _only_ for deployment and use GitHub secrets to keep your key safe.
 
 ### `cli-version`
 

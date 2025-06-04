@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php declare(strict_types=1);
 
 namespace Platformsh\Scripts;
@@ -13,6 +12,11 @@ $e_filename = __DIR__ . '/../known_hosts';
 if (\file_exists($e_filename)) {
     $known_hosts_lines = \file($e_filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
+    if (!is_array($known_hosts_lines)) {
+        log("\nFailed to read existing known_hosts file: $e_filename");
+        exit(1);
+    }
+
     // Build an associative array based on domain key.
     foreach ($known_hosts_lines as $line) {
         [$e_domain, ] = \explode(' ', trim($line));
@@ -22,7 +26,7 @@ if (\file_exists($e_filename)) {
 
 $json = run($cliCommand . ' api:curl ' . escapeshellarg('/regions?filter[private]=0'));
 $regions = $json ? \json_decode($json, true) : [];
-if (!$regions || empty($regions['regions'])) {
+if (empty($regions['regions'])) {
     log("\nUnable to read regions from the API.");
     exit(1);
 }
@@ -32,7 +36,7 @@ log(\count($regions['regions']) . " region(s) found\n");
 $domains = [];
 foreach ($regions['regions'] as $region) {
     $domain = \parse_url($region['endpoint'], PHP_URL_HOST);
-    if (!$domain) {
+    if (!is_string($domain)) {
         log("Failed to parse hostname for region: " . $region['id']);
         continue;
     }
@@ -62,7 +66,7 @@ foreach ($domains as $domain) {
 
 $filename = __DIR__ . '/known_hosts';
 
-if (!\file_put_contents($filename, \implode("\n", $known_hosts) . "\n")) {
+if (\file_put_contents($filename, \implode("\n", $known_hosts) . "\n") === false) {
     log("Failed to write to file: $filename");
     exit(1);
 }
@@ -73,7 +77,7 @@ exit(0);
 /**
  * Logs a message to the terminal.
  */
-function log(string $msg, $newline = true): void
+function log(string $msg, bool $newline = true): void
 {
     \fputs(STDERR, $msg . ($newline ? "\n" : ''));
 }
@@ -104,9 +108,10 @@ function sortDomains(array &$regions): bool
  */
 function compareDomains(string $regionA, string $regionB): int
 {
-    if (\strpos($regionA, '.') && \strpos($regionB, '.')) {
+    if (\strpos($regionA, '.') > 0 && \strpos($regionB, '.') > 0) {
         $partsA = \explode('.', $regionA, 2);
         $partsB = \explode('.', $regionB, 2);
+        assert(\count($partsA) === 2 && \count($partsB) === 2, 'Both domains should have a subdomain and a top-level domain');
         return (\strnatcasecmp($partsA[1], $partsB[1]) * 10) + \strnatcasecmp($partsA[0], $partsB[0]);
     }
     return \strnatcasecmp($regionA, $regionB);

@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { exec, ExecOptions } from '@actions/exec'
-import appRootPath from 'app-root-path'
+import { getAppRootPath } from './utils.js'
 
 export async function installCli(): Promise<void> {
   core.startGroup('Install Platform.sh cli')
@@ -10,7 +10,7 @@ export async function installCli(): Promise<void> {
   if (cliVersion !== 'latest') {
     options.env = { ...process.env, VERSION: cliVersion }
   }
-  await exec(`${appRootPath}/scripts/install-cli.sh`, [], options)
+  await exec(`${getAppRootPath()}/scripts/install-cli.sh`, [], options)
 
   core.endGroup()
 }

@@ -1,9 +1,11 @@
 import Client from 'platformsh-client'
 import * as core from '@actions/core'
 
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url)
-const appRootPath = require('app-root-path')
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export const getAccessToken = async (cliToken: string): Promise<string> => {
   const basicAuth = Buffer.from('platform-cli:', 'latin1').toString('base64')
@@ -62,5 +64,5 @@ export const getEnvironmentName = (): string => {
 }
 
 export const getAppRootPath = (): string => {
-  return appRootPath
+  return resolve(__dirname, '../..')
 }

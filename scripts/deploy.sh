@@ -19,4 +19,5 @@ fi
 if [[ -n "$PARENT_ENVIRONMENT_NAME" ]]; then
 	PLATFORM_OPTS="$PLATFORM_OPTS --parent $PARENT_ENVIRONMENT_NAME"
 fi
+echo $PLATFORM_OPTS
 platform push "${PLATFORM_OPTS}"

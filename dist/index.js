@@ -1,7 +1,7 @@
 import require$$0 from 'os';
 import require$$0$1 from 'crypto';
 import require$$1 from 'fs';
-import require$$1$5, { dirname, resolve } from 'path';
+import require$$1$5, { dirname } from 'path';
 import require$$2$1 from 'http';
 import require$$3$1 from 'https';
 import require$$0$4 from 'net';
@@ -28908,7 +28908,7 @@ const getEnvironmentName = () => {
     return envName;
 };
 const getAppRootPath = () => {
-    return resolve(__dirname, '../..');
+    return __dirname;
 };
 
 async function deploy() {

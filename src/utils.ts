@@ -2,7 +2,7 @@ import Client from 'platformsh-client'
 import * as core from '@actions/core'
 
 import { fileURLToPath } from 'url'
-import { dirname, resolve } from 'path'
+import { dirname } from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -64,5 +64,5 @@ export const getEnvironmentName = (): string => {
 }
 
 export const getAppRootPath = (): string => {
-  return resolve(__dirname, '../..')
+  return __dirname
 }

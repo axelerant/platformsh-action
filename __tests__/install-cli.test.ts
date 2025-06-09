@@ -10,7 +10,7 @@ jest.unstable_mockModule('@actions/exec', () => exec)
 // mocks are used in place of any actual dependencies.
 const { installCli } = await import('../src/install-cli')
 
-import appRootPath from 'app-root-path'
+const { getAppRootPath } = await import('../src/utils')
 
 describe('installCli', () => {
   beforeEach(() => {
@@ -29,7 +29,7 @@ describe('installCli', () => {
     await installCli()
 
     expect(exec.exec).toHaveBeenCalledWith(
-      `${appRootPath}/scripts/install-cli.sh`,
+      `${getAppRootPath()}/scripts/install-cli.sh`,
       [],
       {}
     )
@@ -47,7 +47,7 @@ describe('installCli', () => {
     await installCli()
 
     expect(exec.exec).toHaveBeenCalledWith(
-      `${appRootPath}/scripts/install-cli.sh`,
+      `${getAppRootPath()}/scripts/install-cli.sh`,
       [],
       expect.objectContaining({ env: { ...process.env, VERSION: '1.2.3' } })
     )

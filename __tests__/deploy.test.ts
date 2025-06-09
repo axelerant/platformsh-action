@@ -10,7 +10,7 @@ jest.unstable_mockModule('@actions/exec', () => exec)
 // mocks are used in place of any actual dependencies.
 const { deploy } = await import('../src/deploy')
 
-import appRootPath from 'app-root-path'
+const { getAppRootPath } = await import('../src/utils')
 
 describe('deploy', () => {
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe('deploy', () => {
 
     await deploy()
 
-    const scriptPath = `${appRootPath}/scripts/deploy.sh`
+    const scriptPath = `${getAppRootPath()}/scripts/deploy.sh`
     expect(exec.exec).toHaveBeenCalledWith(scriptPath, [], {
       env: {
         ...process.env,
@@ -50,7 +50,7 @@ describe('deploy', () => {
         FORCE_PUSH: 'false',
         PARENT_ENVIRONMENT_NAME: 'parent-environment-name',
         ENVIRONMENT_NAME: 'environment-name',
-        KNOWN_HOSTS_PATH: `${appRootPath}/known_hosts`
+        KNOWN_HOSTS_PATH: `${getAppRootPath()}/known_hosts`
       }
     })
   })

@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import { exec } from '@actions/exec'
-import appRootPath from 'app-root-path'
-import { getEnvironmentName } from './utils.js'
+import { getAppRootPath, getEnvironmentName } from './utils.js'
 
 export async function deploy(): Promise<number> {
   core.startGroup('Deploy to Platform.sh')
@@ -16,9 +15,11 @@ export async function deploy(): Promise<number> {
     FORCE_PUSH: core.getInput('force-push'),
     PARENT_ENVIRONMENT_NAME: core.getInput('parent-environment-name'),
     ENVIRONMENT_NAME: envName,
-    KNOWN_HOSTS_PATH: `${appRootPath}/known_hosts`
+    KNOWN_HOSTS_PATH: `${getAppRootPath()}/known_hosts`
   }
-  const exitCode = await exec(`${appRootPath}/scripts/deploy.sh`, [], { env })
+  const exitCode = await exec(`${getAppRootPath()}/scripts/deploy.sh`, [], {
+    env
+  })
   core.endGroup()
   return exitCode
 }

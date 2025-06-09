@@ -1,12 +1,15 @@
 import Client from 'platformsh-client'
 import * as core from '@actions/core'
 
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 export const getAccessToken = async (cliToken: string): Promise<string> => {
   const basicAuth = Buffer.from('platform-cli:', 'latin1').toString('base64')
-  const credentials = {
-    grant_type: 'api_token',
-    api_token: cliToken
-  }
+  const credentials = { grant_type: 'api_token', api_token: cliToken }
   const headers = {
     Authorization: `Basic ${basicAuth}`,
     'Content-Type': 'application/json'
@@ -58,4 +61,8 @@ export const getEnvironmentName = (): string => {
     }
   }
   return envName
+}
+
+export const getAppRootPath = (): string => {
+  return __dirname
 }

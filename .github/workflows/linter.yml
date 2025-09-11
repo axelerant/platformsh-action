@@ -63,6 +63,9 @@ jobs:
           VALIDATE_MARKDOWN_PRETTIER: false
           FIX_YAML_PRETTIER: true
 
+      - name: Show differences
+        run: |
+          git diff
       - name: Commit and push linting fixes
         # Run only on:
         # - Pull requests

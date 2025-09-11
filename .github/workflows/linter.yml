@@ -21,6 +21,11 @@ jobs:
   lint:
     name: Lint Codebase
     runs-on: ubuntu-latest
+    permissions:
+      # To write linting fixes
+      contents: write
+      # To write Super-linter status checks
+      statuses: write
 
     steps:
       - name: Checkout

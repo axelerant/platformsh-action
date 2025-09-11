@@ -101,3 +101,7 @@ __tests__/runner/*
 .idea
 .vscode
 *.code-workspace
+
+# Ignore github config files
+github_conf/*
+super-linter-output/*

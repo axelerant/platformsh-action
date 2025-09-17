@@ -40,5 +40,5 @@ outputs:
     description: 'URL of deployed instance'
 
 runs:
-  using: node20
+  using: node24
   main: dist/index.js

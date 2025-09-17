@@ -69,7 +69,7 @@ The environment URL from platform.sh after successful deployment.
   with:
     fetch-depth: 0
 - name: Deploy to platform.sh
-  uses: axelerant/platformsh-actions@v1
+  uses: axelerant/platformsh-action@v2
   with:
     action: 'deploy'
     project-id: ${{ secrets.PlatformProjectId }}
@@ -81,7 +81,7 @@ The environment URL from platform.sh after successful deployment.
 ### Delete PR Env
 
 ```yaml
-uses: axelerant/platformsh-actions@v1
+uses: axelerant/platformsh-action@v2
 with:
   action: 'clean-pr-env'
   project-id: ${{ secrets.PlatformProjectId }}

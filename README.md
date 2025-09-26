@@ -53,6 +53,10 @@ branch name.
 
 The name of the Platform.sh instance to branch from.
 
+### `activate`
+
+Whether or not to activate the environment.
+
 ## Outputs
 
 ### `deployed-url`

@@ -14,6 +14,7 @@ export async function deploy(): Promise<number> {
     PLATFORMSH_CLI_TOKEN: core.getInput('cli-token'),
     FORCE_PUSH: core.getInput('force-push'),
     PARENT_ENVIRONMENT_NAME: core.getInput('parent-environment-name'),
+    ACTIVATE: core.getInput('activate'),
     ENVIRONMENT_NAME: envName,
     KNOWN_HOSTS_PATH: `${getAppRootPath()}/known_hosts`
   }

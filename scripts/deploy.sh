@@ -18,7 +18,11 @@ platform project:set-remote "${PLATFORM_PROJECT_ID}"
 [[ -z "${ENVIRONMENT_NAME:-}" ]] && ENVIRONMENT_NAME="$GITHUB_REF_NAME"
 
 # Build CLI options safely
-PLATFORM_OPTS=(-vv --activate --target "$ENVIRONMENT_NAME")
+PLATFORM_OPTS=(-vv --target "$ENVIRONMENT_NAME")
+
+if [[ -n "${ACTIVATE:-}" ]]; then
+	PLATFORM_OPTS+=("--activate")
+fi
 
 if [[ -n "${FORCE_PUSH:-}" ]]; then
 	PLATFORM_OPTS+=("--force")

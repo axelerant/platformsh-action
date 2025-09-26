@@ -34,6 +34,10 @@ inputs:
   parent-environment-name:
     description: 'Name of the platform.sh instance to branch from'
     required: false
+  activate:
+    description: 'Whether or not to activate the environment'
+    required: false
+    default: true
 # Define your outputs here.
 outputs:
   deployed-url:

@@ -28925,6 +28925,7 @@ async function deploy() {
         PLATFORMSH_CLI_TOKEN: coreExports.getInput('cli-token'),
         FORCE_PUSH: coreExports.getInput('force-push'),
         PARENT_ENVIRONMENT_NAME: coreExports.getInput('parent-environment-name'),
+        ACTIVATE: coreExports.getInput('activate'),
         ENVIRONMENT_NAME: envName,
         KNOWN_HOSTS_PATH: `${getAppRootPath()}/known_hosts`
     };

@@ -20,11 +20,11 @@ platform project:set-remote "${PLATFORM_PROJECT_ID}"
 # Build CLI options safely
 PLATFORM_OPTS=(-vv --target "$ENVIRONMENT_NAME")
 
-if [[ -n "${ACTIVATE:-}" ]]; then
+if [[ "${ACTIVATE:-true}" == "true" ]]; then
 	PLATFORM_OPTS+=("--activate")
 fi
 
-if [[ -n "${FORCE_PUSH:-}" ]]; then
+if [[ "${FORCE_PUSH:-false}" == "true" ]]; then
 	PLATFORM_OPTS+=("--force")
 fi
 

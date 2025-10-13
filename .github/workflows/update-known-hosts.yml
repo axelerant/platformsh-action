@@ -21,7 +21,7 @@ jobs:
       - run: php ./.github/update-known-hosts.php
       - run: mv ./.github/known_hosts . && cp ./known_hosts ./dist/known_hosts
 
-      - uses: stefanzweifel/git-auto-commit-action@v6
+      - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: Update known_hosts file
           commit_options: '--no-verify --signoff'

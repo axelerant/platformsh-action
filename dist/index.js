@@ -1,11 +1,11 @@
 import require$$0 from 'os';
 import require$$0$1 from 'crypto';
 import require$$1 from 'fs';
-import require$$1$5, { dirname } from 'path';
+import require$$1$6, { dirname } from 'path';
 import require$$2$1 from 'http';
-import require$$3$1 from 'https';
+import require$$1$1 from 'https';
 import require$$0$4 from 'net';
-import require$$1$1 from 'tls';
+import require$$1$2 from 'tls';
 import require$$4$1 from 'events';
 import require$$0$3 from 'assert';
 import require$$0$2 from 'util';
@@ -14,15 +14,15 @@ import require$$7 from 'buffer';
 import require$$8 from 'querystring';
 import require$$14 from 'stream/web';
 import require$$0$7 from 'node:stream';
-import require$$1$2 from 'node:util';
+import require$$1$3 from 'node:util';
 import require$$0$6 from 'node:events';
 import require$$0$8 from 'worker_threads';
 import require$$2$2 from 'perf_hooks';
 import require$$5 from 'util/types';
 import require$$4$2 from 'async_hooks';
-import require$$1$3 from 'console';
-import require$$1$4, { fileURLToPath } from 'url';
-import require$$3$2 from 'zlib';
+import require$$1$4 from 'console';
+import require$$1$5, { fileURLToPath } from 'url';
+import require$$3$1 from 'zlib';
 import require$$6 from 'string_decoder';
 import require$$0$9 from 'diagnostics_channel';
 import require$$2$3 from 'child_process';
@@ -77,7 +77,8 @@ function requireUtils$3 () {
 	// We use any as a valid input type
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	Object.defineProperty(utils$3, "__esModule", { value: true });
-	utils$3.toCommandProperties = utils$3.toCommandValue = void 0;
+	utils$3.toCommandValue = toCommandValue;
+	utils$3.toCommandProperties = toCommandProperties;
 	/**
 	 * Sanitizes an input into a string so it can be passed into issueCommand safely
 	 * @param input input to sanitize into a string
@@ -91,7 +92,6 @@ function requireUtils$3 () {
 	    }
 	    return JSON.stringify(input);
 	}
-	utils$3.toCommandValue = toCommandValue;
 	/**
 	 *
 	 * @param annotationProperties
@@ -111,7 +111,6 @@ function requireUtils$3 () {
 	        endColumn: annotationProperties.endColumn
 	    };
 	}
-	utils$3.toCommandProperties = toCommandProperties;
 	
 	return utils$3;
 }
@@ -137,36 +136,68 @@ function requireCommand () {
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (command && command.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
+	var __importStar = (command && command.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
 	Object.defineProperty(command, "__esModule", { value: true });
-	command.issue = command.issueCommand = void 0;
+	command.issueCommand = issueCommand;
+	command.issue = issue;
 	const os = __importStar(require$$0);
 	const utils_1 = requireUtils$3();
 	/**
-	 * Commands
+	 * Issues a command to the GitHub Actions runner
+	 *
+	 * @param command - The command name to issue
+	 * @param properties - Additional properties for the command (key-value pairs)
+	 * @param message - The message to include with the command
+	 * @remarks
+	 * This function outputs a specially formatted string to stdout that the Actions
+	 * runner interprets as a command. These commands can control workflow behavior,
+	 * set outputs, create annotations, mask values, and more.
 	 *
 	 * Command Format:
 	 *   ::name key=value,key=value::message
 	 *
-	 * Examples:
-	 *   ::warning::This is the message
-	 *   ::set-env name=MY_VAR::some value
+	 * @example
+	 * ```typescript
+	 * // Issue a warning annotation
+	 * issueCommand('warning', {}, 'This is a warning message');
+	 * // Output: ::warning::This is a warning message
+	 *
+	 * // Set an environment variable
+	 * issueCommand('set-env', { name: 'MY_VAR' }, 'some value');
+	 * // Output: ::set-env name=MY_VAR::some value
+	 *
+	 * // Add a secret mask
+	 * issueCommand('add-mask', {}, 'secretValue123');
+	 * // Output: ::add-mask::secretValue123
+	 * ```
+	 *
+	 * @internal
+	 * This is an internal utility function that powers the public API functions
+	 * such as setSecret, warning, error, and exportVariable.
 	 */
 	function issueCommand(command, properties, message) {
 	    const cmd = new Command(command, properties, message);
 	    process.stdout.write(cmd.toString() + os.EOL);
 	}
-	command.issueCommand = issueCommand;
 	function issue(name, message = '') {
 	    issueCommand(name, {}, message);
 	}
-	command.issue = issue;
 	const CMD_STRING = '::';
 	class Command {
 	    constructor(command, properties, message) {
@@ -243,15 +274,26 @@ function requireFileCommand () {
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (fileCommand && fileCommand.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
+	var __importStar = (fileCommand && fileCommand.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
 	Object.defineProperty(fileCommand, "__esModule", { value: true });
-	fileCommand.prepareKeyValueMessage = fileCommand.issueFileCommand = void 0;
+	fileCommand.issueFileCommand = issueFileCommand;
+	fileCommand.prepareKeyValueMessage = prepareKeyValueMessage;
 	// We use any as a valid input type
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const crypto = __importStar(require$$0$1);
@@ -270,7 +312,6 @@ function requireFileCommand () {
 	        encoding: 'utf8'
 	    });
 	}
-	fileCommand.issueFileCommand = issueFileCommand;
 	function prepareKeyValueMessage(key, value) {
 	    const delimiter = `ghadelimiter_${crypto.randomUUID()}`;
 	    const convertedValue = (0, utils_1.toCommandValue)(value);
@@ -285,24 +326,24 @@ function requireFileCommand () {
 	    }
 	    return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
 	}
-	fileCommand.prepareKeyValueMessage = prepareKeyValueMessage;
 	
 	return fileCommand;
 }
 
 var oidcUtils = {};
 
-var lib = {};
+var lib$1 = {};
 
-var proxy = {};
+var proxy$1 = {};
 
-var hasRequiredProxy;
+var hasRequiredProxy$1;
 
-function requireProxy () {
-	if (hasRequiredProxy) return proxy;
-	hasRequiredProxy = 1;
-	Object.defineProperty(proxy, "__esModule", { value: true });
-	proxy.checkBypass = proxy.getProxyUrl = void 0;
+function requireProxy$1 () {
+	if (hasRequiredProxy$1) return proxy$1;
+	hasRequiredProxy$1 = 1;
+	Object.defineProperty(proxy$1, "__esModule", { value: true });
+	proxy$1.getProxyUrl = getProxyUrl;
+	proxy$1.checkBypass = checkBypass;
 	function getProxyUrl(reqUrl) {
 	    const usingSsl = reqUrl.protocol === 'https:';
 	    if (checkBypass(reqUrl)) {
@@ -329,7 +370,6 @@ function requireProxy () {
 	        return undefined;
 	    }
 	}
-	proxy.getProxyUrl = getProxyUrl;
 	function checkBypass(reqUrl) {
 	    if (!reqUrl.hostname) {
 	        return false;
@@ -373,7 +413,6 @@ function requireProxy () {
 	    }
 	    return false;
 	}
-	proxy.checkBypass = checkBypass;
 	function isLoopbackAddress(host) {
 	    const hostLower = host.toLowerCase();
 	    return (hostLower === 'localhost' ||
@@ -395,7 +434,7 @@ function requireProxy () {
 	    }
 	}
 	
-	return proxy;
+	return proxy$1;
 }
 
 var tunnel$1 = {};
@@ -405,9 +444,9 @@ var hasRequiredTunnel$1;
 function requireTunnel$1 () {
 	if (hasRequiredTunnel$1) return tunnel$1;
 	hasRequiredTunnel$1 = 1;
-	var tls = require$$1$1;
+	var tls = require$$1$2;
 	var http = require$$2$1;
-	var https = require$$3$1;
+	var https = require$$1$1;
 	var events = require$$4$1;
 	var util = require$$0$2;
 
@@ -1787,7 +1826,7 @@ function requireSbmh () {
 	 * by Hongli Lai at: https://github.com/FooBarWidget/boyer-moore-horspool
 	 */
 	const EventEmitter = require$$0$6.EventEmitter;
-	const inherits = require$$1$2.inherits;
+	const inherits = require$$1$3.inherits;
 
 	function SBMH (needle) {
 	  if (typeof needle === 'string') {
@@ -1996,7 +2035,7 @@ function requirePartStream () {
 	if (hasRequiredPartStream) return PartStream_1;
 	hasRequiredPartStream = 1;
 
-	const inherits = require$$1$2.inherits;
+	const inherits = require$$1$3.inherits;
 	const ReadableStream = require$$0$7.Readable;
 
 	function PartStream (opts) {
@@ -2042,7 +2081,7 @@ function requireHeaderParser () {
 	hasRequiredHeaderParser = 1;
 
 	const EventEmitter = require$$0$6.EventEmitter;
-	const inherits = require$$1$2.inherits;
+	const inherits = require$$1$3.inherits;
 	const getLimit = requireGetLimit();
 
 	const StreamSearch = requireSbmh();
@@ -2150,7 +2189,7 @@ function requireDicer () {
 	hasRequiredDicer = 1;
 
 	const WritableStream = require$$0$7.Writable;
-	const inherits = require$$1$2.inherits;
+	const inherits = require$$1$3.inherits;
 
 	const StreamSearch = requireSbmh();
 
@@ -2727,7 +2766,7 @@ function requireMultipart () {
 	//     -- this will require modifications to utils.parseParams
 
 	const { Readable } = require$$0$7;
-	const { inherits } = require$$1$2;
+	const { inherits } = require$$1$3;
 
 	const Dicer = requireDicer();
 
@@ -3293,7 +3332,7 @@ function requireMain () {
 	hasRequiredMain = 1;
 
 	const WritableStream = require$$0$7.Writable;
-	const { inherits } = require$$1$2;
+	const { inherits } = require$$1$3;
 	const Dicer = requireDicer();
 
 	const MultipartParser = requireMultipart();
@@ -8117,7 +8156,7 @@ function requireConnect () {
 	    let socket;
 	    if (protocol === 'https:') {
 	      if (!tls) {
-	        tls = require$$1$1;
+	        tls = require$$1$2;
 	      }
 	      servername = servername || options.servername || util.getServerName(host) || null;
 
@@ -14141,7 +14180,7 @@ function requirePendingInterceptorsFormatter () {
 	hasRequiredPendingInterceptorsFormatter = 1;
 
 	const { Transform } = require$$0$5;
-	const { Console } = require$$1$3;
+	const { Console } = require$$1$4;
 
 	/**
 	 * Gets the output of `console.table(…)` as a string.
@@ -14368,7 +14407,7 @@ function requireProxyAgent () {
 	hasRequiredProxyAgent = 1;
 
 	const { kProxy, kClose, kDestroy, kInterceptors } = requireSymbols$4();
-	const { URL } = require$$1$4;
+	const { URL } = require$$1$5;
 	const Agent = requireAgent();
 	const Pool = requirePool();
 	const DispatcherBase = requireDispatcherBase();
@@ -17126,7 +17165,7 @@ function requireFetch () {
 	} = requireResponse();
 	const { Headers } = requireHeaders();
 	const { Request, makeRequest } = requireRequest();
-	const zlib = require$$3$2;
+	const zlib = require$$3$1;
 	const {
 	  bytesMatch,
 	  makePolicyContainer,
@@ -24380,13 +24419,13 @@ function requireUndici () {
 	return undici;
 }
 
-var hasRequiredLib;
+var hasRequiredLib$1;
 
-function requireLib () {
-	if (hasRequiredLib) return lib;
-	hasRequiredLib = 1;
+function requireLib$1 () {
+	if (hasRequiredLib$1) return lib$1;
+	hasRequiredLib$1 = 1;
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	var __createBinding = (lib && lib.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	var __createBinding = (lib$1 && lib$1.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    var desc = Object.getOwnPropertyDescriptor(m, k);
 	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
@@ -24397,19 +24436,29 @@ function requireLib () {
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
 	}));
-	var __setModuleDefault = (lib && lib.__setModuleDefault) || (Object.create ? (function(o, v) {
+	var __setModuleDefault = (lib$1 && lib$1.__setModuleDefault) || (Object.create ? (function(o, v) {
 	    Object.defineProperty(o, "default", { enumerable: true, value: v });
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (lib && lib.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
-	var __awaiter = (lib && lib.__awaiter) || function (thisArg, _arguments, P, generator) {
+	var __importStar = (lib$1 && lib$1.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
+	var __awaiter = (lib$1 && lib$1.__awaiter) || function (thisArg, _arguments, P, generator) {
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -24418,11 +24467,13 @@ function requireLib () {
 	        step((generator = generator.apply(thisArg, _arguments || [])).next());
 	    });
 	};
-	Object.defineProperty(lib, "__esModule", { value: true });
-	lib.HttpClient = lib.isHttps = lib.HttpClientResponse = lib.HttpClientError = lib.getProxyUrl = lib.MediaTypes = lib.Headers = lib.HttpCodes = void 0;
+	Object.defineProperty(lib$1, "__esModule", { value: true });
+	lib$1.HttpClient = lib$1.HttpClientResponse = lib$1.HttpClientError = lib$1.MediaTypes = lib$1.Headers = lib$1.HttpCodes = void 0;
+	lib$1.getProxyUrl = getProxyUrl;
+	lib$1.isHttps = isHttps;
 	const http = __importStar(require$$2$1);
-	const https = __importStar(require$$3$1);
-	const pm = __importStar(requireProxy());
+	const https = __importStar(require$$1$1);
+	const pm = __importStar(requireProxy$1());
 	const tunnel = __importStar(requireTunnel());
 	const undici_1 = requireUndici();
 	var HttpCodes;
@@ -24454,16 +24505,16 @@ function requireLib () {
 	    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
 	    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
 	    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
-	})(HttpCodes || (lib.HttpCodes = HttpCodes = {}));
+	})(HttpCodes || (lib$1.HttpCodes = HttpCodes = {}));
 	var Headers;
 	(function (Headers) {
 	    Headers["Accept"] = "accept";
 	    Headers["ContentType"] = "content-type";
-	})(Headers || (lib.Headers = Headers = {}));
+	})(Headers || (lib$1.Headers = Headers = {}));
 	var MediaTypes;
 	(function (MediaTypes) {
 	    MediaTypes["ApplicationJson"] = "application/json";
-	})(MediaTypes || (lib.MediaTypes = MediaTypes = {}));
+	})(MediaTypes || (lib$1.MediaTypes = MediaTypes = {}));
 	/**
 	 * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
 	 * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
@@ -24472,7 +24523,6 @@ function requireLib () {
 	    const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
 	    return proxyUrl ? proxyUrl.href : '';
 	}
-	lib.getProxyUrl = getProxyUrl;
 	const HttpRedirectCodes = [
 	    HttpCodes.MovedPermanently,
 	    HttpCodes.ResourceMoved,
@@ -24496,7 +24546,7 @@ function requireLib () {
 	        Object.setPrototypeOf(this, HttpClientError.prototype);
 	    }
 	}
-	lib.HttpClientError = HttpClientError;
+	lib$1.HttpClientError = HttpClientError;
 	class HttpClientResponse {
 	    constructor(message) {
 	        this.message = message;
@@ -24528,12 +24578,11 @@ function requireLib () {
 	        });
 	    }
 	}
-	lib.HttpClientResponse = HttpClientResponse;
+	lib$1.HttpClientResponse = HttpClientResponse;
 	function isHttps(requestUrl) {
 	    const parsedUrl = new URL(requestUrl);
 	    return parsedUrl.protocol === 'https:';
 	}
-	lib.isHttps = isHttps;
 	class HttpClient {
 	    constructor(userAgent, handlers, requestOptions) {
 	        this._ignoreSslError = false;
@@ -24616,36 +24665,39 @@ function requireLib () {
 	     * Gets a typed object from an endpoint
 	     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
 	     */
-	    getJson(requestUrl, additionalHeaders = {}) {
-	        return __awaiter(this, void 0, void 0, function* () {
+	    getJson(requestUrl_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
 	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
 	            const res = yield this.get(requestUrl, additionalHeaders);
 	            return this._processResponse(res, this.requestOptions);
 	        });
 	    }
-	    postJson(requestUrl, obj, additionalHeaders = {}) {
-	        return __awaiter(this, void 0, void 0, function* () {
+	    postJson(requestUrl_1, obj_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
 	            const data = JSON.stringify(obj, null, 2);
 	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] =
+	                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
 	            const res = yield this.post(requestUrl, data, additionalHeaders);
 	            return this._processResponse(res, this.requestOptions);
 	        });
 	    }
-	    putJson(requestUrl, obj, additionalHeaders = {}) {
-	        return __awaiter(this, void 0, void 0, function* () {
+	    putJson(requestUrl_1, obj_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
 	            const data = JSON.stringify(obj, null, 2);
 	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] =
+	                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
 	            const res = yield this.put(requestUrl, data, additionalHeaders);
 	            return this._processResponse(res, this.requestOptions);
 	        });
 	    }
-	    patchJson(requestUrl, obj, additionalHeaders = {}) {
-	        return __awaiter(this, void 0, void 0, function* () {
+	    patchJson(requestUrl_1, obj_1) {
+	        return __awaiter(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
 	            const data = JSON.stringify(obj, null, 2);
 	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] =
+	                this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes.ApplicationJson);
 	            const res = yield this.patch(requestUrl, data, additionalHeaders);
 	            return this._processResponse(res, this.requestOptions);
 	        });
@@ -24874,12 +24926,73 @@ function requireLib () {
 	        }
 	        return lowercaseKeys(headers || {});
 	    }
+	    /**
+	     * Gets an existing header value or returns a default.
+	     * Handles converting number header values to strings since HTTP headers must be strings.
+	     * Note: This returns string | string[] since some headers can have multiple values.
+	     * For headers that must always be a single string (like Content-Type), use the
+	     * specialized _getExistingOrDefaultContentTypeHeader method instead.
+	     */
 	    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
 	        let clientHeader;
 	        if (this.requestOptions && this.requestOptions.headers) {
-	            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
+	            const headerValue = lowercaseKeys(this.requestOptions.headers)[header];
+	            if (headerValue) {
+	                clientHeader =
+	                    typeof headerValue === 'number' ? headerValue.toString() : headerValue;
+	            }
 	        }
-	        return additionalHeaders[header] || clientHeader || _default;
+	        const additionalValue = additionalHeaders[header];
+	        if (additionalValue !== undefined) {
+	            return typeof additionalValue === 'number'
+	                ? additionalValue.toString()
+	                : additionalValue;
+	        }
+	        if (clientHeader !== undefined) {
+	            return clientHeader;
+	        }
+	        return _default;
+	    }
+	    /**
+	     * Specialized version of _getExistingOrDefaultHeader for Content-Type header.
+	     * Always returns a single string (not an array) since Content-Type should be a single value.
+	     * Converts arrays to comma-separated strings and numbers to strings to ensure type safety.
+	     * This was split from _getExistingOrDefaultHeader to provide stricter typing for callers
+	     * that assign the result to places expecting a string (e.g., additionalHeaders[Headers.ContentType]).
+	     */
+	    _getExistingOrDefaultContentTypeHeader(additionalHeaders, _default) {
+	        let clientHeader;
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            const headerValue = lowercaseKeys(this.requestOptions.headers)[Headers.ContentType];
+	            if (headerValue) {
+	                if (typeof headerValue === 'number') {
+	                    clientHeader = String(headerValue);
+	                }
+	                else if (Array.isArray(headerValue)) {
+	                    clientHeader = headerValue.join(', ');
+	                }
+	                else {
+	                    clientHeader = headerValue;
+	                }
+	            }
+	        }
+	        const additionalValue = additionalHeaders[Headers.ContentType];
+	        // Return the first non-undefined value, converting numbers or arrays to strings if necessary
+	        if (additionalValue !== undefined) {
+	            if (typeof additionalValue === 'number') {
+	                return String(additionalValue);
+	            }
+	            else if (Array.isArray(additionalValue)) {
+	                return additionalValue.join(', ');
+	            }
+	            else {
+	                return additionalValue;
+	            }
+	        }
+	        if (clientHeader !== undefined) {
+	            return clientHeader;
+	        }
+	        return _default;
 	    }
 	    _getAgent(parsedUrl) {
 	        let agent;
@@ -25033,10 +25146,10 @@ function requireLib () {
 	        });
 	    }
 	}
-	lib.HttpClient = HttpClient;
+	lib$1.HttpClient = HttpClient;
 	const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
 	
-	return lib;
+	return lib$1;
 }
 
 var auth$1 = {};
@@ -25145,7 +25258,7 @@ function requireOidcUtils () {
 	};
 	Object.defineProperty(oidcUtils, "__esModule", { value: true });
 	oidcUtils.OidcClient = void 0;
-	const http_client_1 = requireLib();
+	const http_client_1 = requireLib$1();
 	const auth_1 = requireAuth();
 	const core_1 = requireCore();
 	class OidcClient {
@@ -25171,8 +25284,8 @@ function requireOidcUtils () {
 	        return runtimeUrl;
 	    }
 	    static getCall(id_token_url) {
-	        var _a;
 	        return __awaiter(this, void 0, void 0, function* () {
+	            var _a;
 	            const httpclient = OidcClient.createHttpClient();
 	            const res = yield httpclient
 	                .getJson(id_token_url)
@@ -25530,16 +25643,28 @@ function requirePathUtils () {
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (pathUtils && pathUtils.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
+	var __importStar = (pathUtils && pathUtils.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
 	Object.defineProperty(pathUtils, "__esModule", { value: true });
-	pathUtils.toPlatformPath = pathUtils.toWin32Path = pathUtils.toPosixPath = void 0;
-	const path = __importStar(require$$1$5);
+	pathUtils.toPosixPath = toPosixPath;
+	pathUtils.toWin32Path = toWin32Path;
+	pathUtils.toPlatformPath = toPlatformPath;
+	const path = __importStar(require$$1$6);
 	/**
 	 * toPosixPath converts the given path to the posix form. On Windows, \\ will be
 	 * replaced with /.
@@ -25550,7 +25675,6 @@ function requirePathUtils () {
 	function toPosixPath(pth) {
 	    return pth.replace(/[\\]/g, '/');
 	}
-	pathUtils.toPosixPath = toPosixPath;
 	/**
 	 * toWin32Path converts the given path to the win32 form. On Linux, / will be
 	 * replaced with \\.
@@ -25561,7 +25685,6 @@ function requirePathUtils () {
 	function toWin32Path(pth) {
 	    return pth.replace(/[/]/g, '\\');
 	}
-	pathUtils.toWin32Path = toWin32Path;
 	/**
 	 * toPlatformPath converts the given path to a platform-specific path. It does
 	 * this by replacing instances of / and \ with the platform-specific path
@@ -25573,7 +25696,6 @@ function requirePathUtils () {
 	function toPlatformPath(pth) {
 	    return pth.replace(/[/\\]/g, path.sep);
 	}
-	pathUtils.toPlatformPath = toPlatformPath;
 	
 	return pathUtils;
 }
@@ -25596,7 +25718,11 @@ function requireIoUtil () {
 	(function (exports$1) {
 		var __createBinding = (ioUtil && ioUtil.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 		    if (k2 === undefined) k2 = k;
-		    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+		    var desc = Object.getOwnPropertyDescriptor(m, k);
+		    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+		      desc = { enumerable: true, get: function() { return m[k]; } };
+		    }
+		    Object.defineProperty(o, k2, desc);
 		}) : (function(o, m, k, k2) {
 		    if (k2 === undefined) k2 = k;
 		    o[k2] = m[k];
@@ -25606,13 +25732,23 @@ function requireIoUtil () {
 		}) : function(o, v) {
 		    o["default"] = v;
 		});
-		var __importStar = (ioUtil && ioUtil.__importStar) || function (mod) {
-		    if (mod && mod.__esModule) return mod;
-		    var result = {};
-		    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-		    __setModuleDefault(result, mod);
-		    return result;
-		};
+		var __importStar = (ioUtil && ioUtil.__importStar) || (function () {
+		    var ownKeys = function(o) {
+		        ownKeys = Object.getOwnPropertyNames || function (o) {
+		            var ar = [];
+		            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+		            return ar;
+		        };
+		        return ownKeys(o);
+		    };
+		    return function (mod) {
+		        if (mod && mod.__esModule) return mod;
+		        var result = {};
+		        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+		        __setModuleDefault(result, mod);
+		        return result;
+		    };
+		})();
 		var __awaiter = (ioUtil && ioUtil.__awaiter) || function (thisArg, _arguments, P, generator) {
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
@@ -25624,21 +25760,49 @@ function requireIoUtil () {
 		};
 		var _a;
 		Object.defineProperty(exports$1, "__esModule", { value: true });
-		exports$1.getCmdPath = exports$1.tryGetExecutablePath = exports$1.isRooted = exports$1.isDirectory = exports$1.exists = exports$1.READONLY = exports$1.UV_FS_O_EXLOCK = exports$1.IS_WINDOWS = exports$1.unlink = exports$1.symlink = exports$1.stat = exports$1.rmdir = exports$1.rm = exports$1.rename = exports$1.readlink = exports$1.readdir = exports$1.open = exports$1.mkdir = exports$1.lstat = exports$1.copyFile = exports$1.chmod = void 0;
+		exports$1.READONLY = exports$1.UV_FS_O_EXLOCK = exports$1.IS_WINDOWS = exports$1.unlink = exports$1.symlink = exports$1.stat = exports$1.rmdir = exports$1.rm = exports$1.rename = exports$1.readdir = exports$1.open = exports$1.mkdir = exports$1.lstat = exports$1.copyFile = exports$1.chmod = void 0;
+		exports$1.readlink = readlink;
+		exports$1.exists = exists;
+		exports$1.isDirectory = isDirectory;
+		exports$1.isRooted = isRooted;
+		exports$1.tryGetExecutablePath = tryGetExecutablePath;
+		exports$1.getCmdPath = getCmdPath;
 		const fs = __importStar(require$$1);
-		const path = __importStar(require$$1$5);
+		const path = __importStar(require$$1$6);
 		_a = fs.promises
 		// export const {open} = 'fs'
-		, exports$1.chmod = _a.chmod, exports$1.copyFile = _a.copyFile, exports$1.lstat = _a.lstat, exports$1.mkdir = _a.mkdir, exports$1.open = _a.open, exports$1.readdir = _a.readdir, exports$1.readlink = _a.readlink, exports$1.rename = _a.rename, exports$1.rm = _a.rm, exports$1.rmdir = _a.rmdir, exports$1.stat = _a.stat, exports$1.symlink = _a.symlink, exports$1.unlink = _a.unlink;
+		, exports$1.chmod = _a.chmod, exports$1.copyFile = _a.copyFile, exports$1.lstat = _a.lstat, exports$1.mkdir = _a.mkdir, exports$1.open = _a.open, exports$1.readdir = _a.readdir, exports$1.rename = _a.rename, exports$1.rm = _a.rm, exports$1.rmdir = _a.rmdir, exports$1.stat = _a.stat, exports$1.symlink = _a.symlink, exports$1.unlink = _a.unlink;
 		// export const {open} = 'fs'
 		exports$1.IS_WINDOWS = process.platform === 'win32';
+		/**
+		 * Custom implementation of readlink to ensure Windows junctions
+		 * maintain trailing backslash for backward compatibility with Node.js < 24
+		 *
+		 * In Node.js 20, Windows junctions (directory symlinks) always returned paths
+		 * with trailing backslashes. Node.js 24 removed this behavior, which breaks
+		 * code that relied on this format for path operations.
+		 *
+		 * This implementation restores the Node 20 behavior by adding a trailing
+		 * backslash to all junction results on Windows.
+		 */
+		function readlink(fsPath) {
+		    return __awaiter(this, void 0, void 0, function* () {
+		        const result = yield fs.promises.readlink(fsPath);
+		        // On Windows, restore Node 20 behavior: add trailing backslash to all results
+		        // since junctions on Windows are always directory links
+		        if (exports$1.IS_WINDOWS && !result.endsWith('\\')) {
+		            return `${result}\\`;
+		        }
+		        return result;
+		    });
+		}
 		// See https://github.com/nodejs/node/blob/d0153aee367422d0858105abec186da4dff0a0c5/deps/uv/include/uv/win.h#L691
 		exports$1.UV_FS_O_EXLOCK = 0x10000000;
 		exports$1.READONLY = fs.constants.O_RDONLY;
 		function exists(fsPath) {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        try {
-		            yield exports$1.stat(fsPath);
+		            yield (0, exports$1.stat)(fsPath);
 		        }
 		        catch (err) {
 		            if (err.code === 'ENOENT') {
@@ -25649,14 +25813,12 @@ function requireIoUtil () {
 		        return true;
 		    });
 		}
-		exports$1.exists = exists;
-		function isDirectory(fsPath, useStat = false) {
-		    return __awaiter(this, void 0, void 0, function* () {
-		        const stats = useStat ? yield exports$1.stat(fsPath) : yield exports$1.lstat(fsPath);
+		function isDirectory(fsPath_1) {
+		    return __awaiter(this, arguments, void 0, function* (fsPath, useStat = false) {
+		        const stats = useStat ? yield (0, exports$1.stat)(fsPath) : yield (0, exports$1.lstat)(fsPath);
 		        return stats.isDirectory();
 		    });
 		}
-		exports$1.isDirectory = isDirectory;
 		/**
 		 * On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
 		 * \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
@@ -25672,7 +25834,6 @@ function requireIoUtil () {
 		    }
 		    return p.startsWith('/');
 		}
-		exports$1.isRooted = isRooted;
 		/**
 		 * Best effort attempt to determine whether a file exists and is executable.
 		 * @param filePath    file path to check
@@ -25684,7 +25845,7 @@ function requireIoUtil () {
 		        let stats = undefined;
 		        try {
 		            // test file exists
-		            stats = yield exports$1.stat(filePath);
+		            stats = yield (0, exports$1.stat)(filePath);
 		        }
 		        catch (err) {
 		            if (err.code !== 'ENOENT') {
@@ -25712,7 +25873,7 @@ function requireIoUtil () {
 		            filePath = originalFilePath + extension;
 		            stats = undefined;
 		            try {
-		                stats = yield exports$1.stat(filePath);
+		                stats = yield (0, exports$1.stat)(filePath);
 		            }
 		            catch (err) {
 		                if (err.code !== 'ENOENT') {
@@ -25726,7 +25887,7 @@ function requireIoUtil () {
 		                    try {
 		                        const directory = path.dirname(filePath);
 		                        const upperName = path.basename(filePath).toUpperCase();
-		                        for (const actualName of yield exports$1.readdir(directory)) {
+		                        for (const actualName of yield (0, exports$1.readdir)(directory)) {
 		                            if (upperName === actualName.toUpperCase()) {
 		                                filePath = path.join(directory, actualName);
 		                                break;
@@ -25749,7 +25910,6 @@ function requireIoUtil () {
 		        return '';
 		    });
 		}
-		exports$1.tryGetExecutablePath = tryGetExecutablePath;
 		function normalizeSeparators(p) {
 		    p = p || '';
 		    if (exports$1.IS_WINDOWS) {
@@ -25766,15 +25926,18 @@ function requireIoUtil () {
 		//   256 128 64 32 16 8 4 2 1
 		function isUnixExecutable(stats) {
 		    return ((stats.mode & 1) > 0 ||
-		        ((stats.mode & 8) > 0 && stats.gid === process.getgid()) ||
-		        ((stats.mode & 64) > 0 && stats.uid === process.getuid()));
+		        ((stats.mode & 8) > 0 &&
+		            process.getgid !== undefined &&
+		            stats.gid === process.getgid()) ||
+		        ((stats.mode & 64) > 0 &&
+		            process.getuid !== undefined &&
+		            stats.uid === process.getuid()));
 		}
 		// Get the path of cmd.exe in windows
 		function getCmdPath() {
 		    var _a;
 		    return (_a = process.env['COMSPEC']) !== null && _a !== void 0 ? _a : `cmd.exe`;
 		}
-		exports$1.getCmdPath = getCmdPath;
 		
 	} (ioUtil));
 	return ioUtil;
@@ -25787,7 +25950,11 @@ function requireIo () {
 	hasRequiredIo = 1;
 	var __createBinding = (io && io.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
-	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
 	}) : (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
@@ -25797,13 +25964,23 @@ function requireIo () {
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (io && io.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
+	var __importStar = (io && io.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
 	var __awaiter = (io && io.__awaiter) || function (thisArg, _arguments, P, generator) {
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
@@ -25814,9 +25991,14 @@ function requireIo () {
 	    });
 	};
 	Object.defineProperty(io, "__esModule", { value: true });
-	io.findInPath = io.which = io.mkdirP = io.rmRF = io.mv = io.cp = void 0;
+	io.cp = cp;
+	io.mv = mv;
+	io.rmRF = rmRF;
+	io.mkdirP = mkdirP;
+	io.which = which;
+	io.findInPath = findInPath;
 	const assert_1 = require$$0$3;
-	const path = __importStar(require$$1$5);
+	const path = __importStar(require$$1$6);
 	const ioUtil = __importStar(requireIoUtil());
 	/**
 	 * Copies a file or folder.
@@ -25826,8 +26008,8 @@ function requireIo () {
 	 * @param     dest      destination path
 	 * @param     options   optional. See CopyOptions.
 	 */
-	function cp(source, dest, options = {}) {
-	    return __awaiter(this, void 0, void 0, function* () {
+	function cp(source_1, dest_1) {
+	    return __awaiter(this, arguments, void 0, function* (source, dest, options = {}) {
 	        const { force, recursive, copySourceDirectory } = readCopyOptions(options);
 	        const destStat = (yield ioUtil.exists(dest)) ? yield ioUtil.stat(dest) : null;
 	        // Dest is an existing file, but not forcing
@@ -25859,7 +26041,6 @@ function requireIo () {
 	        }
 	    });
 	}
-	io.cp = cp;
 	/**
 	 * Moves a path.
 	 *
@@ -25867,8 +26048,8 @@ function requireIo () {
 	 * @param     dest      destination path
 	 * @param     options   optional. See MoveOptions.
 	 */
-	function mv(source, dest, options = {}) {
-	    return __awaiter(this, void 0, void 0, function* () {
+	function mv(source_1, dest_1) {
+	    return __awaiter(this, arguments, void 0, function* (source, dest, options = {}) {
 	        if (yield ioUtil.exists(dest)) {
 	            let destExists = true;
 	            if (yield ioUtil.isDirectory(dest)) {
@@ -25889,7 +26070,6 @@ function requireIo () {
 	        yield ioUtil.rename(source, dest);
 	    });
 	}
-	io.mv = mv;
 	/**
 	 * Remove a path recursively with force
 	 *
@@ -25918,7 +26098,6 @@ function requireIo () {
 	        }
 	    });
 	}
-	io.rmRF = rmRF;
 	/**
 	 * Make a directory.  Creates the full path with folders in between
 	 * Will throw if it fails
@@ -25928,11 +26107,10 @@ function requireIo () {
 	 */
 	function mkdirP(fsPath) {
 	    return __awaiter(this, void 0, void 0, function* () {
-	        assert_1.ok(fsPath, 'a path argument must be provided');
+	        (0, assert_1.ok)(fsPath, 'a path argument must be provided');
 	        yield ioUtil.mkdir(fsPath, { recursive: true });
 	    });
 	}
-	io.mkdirP = mkdirP;
 	/**
 	 * Returns path of a tool had the tool actually been invoked.  Resolves via paths.
 	 * If you check and the tool does not exist, it will throw.
@@ -25966,7 +26144,6 @@ function requireIo () {
 	        return '';
 	    });
 	}
-	io.which = which;
 	/**
 	 * Returns a list of all occurrences of the given tool on the system path.
 	 *
@@ -26023,7 +26200,6 @@ function requireIo () {
 	        return matches;
 	    });
 	}
-	io.findInPath = findInPath;
 	function readCopyOptions(options) {
 	    const force = options.force == null ? true : options.force;
 	    const recursive = Boolean(options.recursive);
@@ -26093,7 +26269,11 @@ function requireToolrunner () {
 	hasRequiredToolrunner = 1;
 	var __createBinding = (toolrunner && toolrunner.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
-	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
 	}) : (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
@@ -26103,13 +26283,23 @@ function requireToolrunner () {
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (toolrunner && toolrunner.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
+	var __importStar = (toolrunner && toolrunner.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
 	var __awaiter = (toolrunner && toolrunner.__awaiter) || function (thisArg, _arguments, P, generator) {
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
@@ -26120,11 +26310,12 @@ function requireToolrunner () {
 	    });
 	};
 	Object.defineProperty(toolrunner, "__esModule", { value: true });
-	toolrunner.argStringToArray = toolrunner.ToolRunner = void 0;
+	toolrunner.ToolRunner = void 0;
+	toolrunner.argStringToArray = argStringToArray;
 	const os = __importStar(require$$0);
 	const events = __importStar(require$$4$1);
 	const child = __importStar(require$$2$3);
-	const path = __importStar(require$$1$5);
+	const path = __importStar(require$$1$6);
 	const io = __importStar(requireIo());
 	const ioUtil = __importStar(requireIoUtil());
 	const timers_1 = require$$6$1;
@@ -26352,10 +26543,7 @@ function requireToolrunner () {
 	            }
 	        }
 	        reverse += '"';
-	        return reverse
-	            .split('')
-	            .reverse()
-	            .join('');
+	        return reverse.split('').reverse().join('');
 	    }
 	    _uvQuoteCmdArg(arg) {
 	        // Tool runner wraps child_process.spawn() and needs to apply the same quoting as
@@ -26431,10 +26619,7 @@ function requireToolrunner () {
 	            }
 	        }
 	        reverse += '"';
-	        return reverse
-	            .split('')
-	            .reverse()
-	            .join('');
+	        return reverse.split('').reverse().join('');
 	    }
 	    _cloneExecOptions(options) {
 	        options = options || {};
@@ -26638,7 +26823,6 @@ function requireToolrunner () {
 	    }
 	    return args;
 	}
-	toolrunner.argStringToArray = argStringToArray;
 	class ExecState extends events.EventEmitter {
 	    constructor(options, toolPath) {
 	        super();
@@ -26667,7 +26851,7 @@ function requireToolrunner () {
 	            this._setResult();
 	        }
 	        else if (this.processExited) {
-	            this.timeout = timers_1.setTimeout(ExecState.HandleTimeout, this.delay, this);
+	            this.timeout = (0, timers_1.setTimeout)(ExecState.HandleTimeout, this.delay, this);
 	        }
 	    }
 	    _debug(message) {
@@ -26700,8 +26884,7 @@ function requireToolrunner () {
 	            return;
 	        }
 	        if (!state.processClosed && state.processExited) {
-	            const message = `The STDIO streams did not close within ${state.delay /
-	                1000} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
+	            const message = `The STDIO streams did not close within ${state.delay / 1000} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
 	            state._debug(message);
 	        }
 	        state._setResult();
@@ -26718,7 +26901,11 @@ function requireExec () {
 	hasRequiredExec = 1;
 	var __createBinding = (exec && exec.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
-	    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
 	}) : (function(o, m, k, k2) {
 	    if (k2 === undefined) k2 = k;
 	    o[k2] = m[k];
@@ -26728,13 +26915,23 @@ function requireExec () {
 	}) : function(o, v) {
 	    o["default"] = v;
 	});
-	var __importStar = (exec && exec.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-	    __setModuleDefault(result, mod);
-	    return result;
-	};
+	var __importStar = (exec && exec.__importStar) || (function () {
+	    var ownKeys = function(o) {
+	        ownKeys = Object.getOwnPropertyNames || function (o) {
+	            var ar = [];
+	            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+	            return ar;
+	        };
+	        return ownKeys(o);
+	    };
+	    return function (mod) {
+	        if (mod && mod.__esModule) return mod;
+	        var result = {};
+	        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+	        __setModuleDefault(result, mod);
+	        return result;
+	    };
+	})();
 	var __awaiter = (exec && exec.__awaiter) || function (thisArg, _arguments, P, generator) {
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
@@ -26745,7 +26942,8 @@ function requireExec () {
 	    });
 	};
 	Object.defineProperty(exec, "__esModule", { value: true });
-	exec.getExecOutput = exec.exec = void 0;
+	exec.exec = exec$1;
+	exec.getExecOutput = getExecOutput;
 	const string_decoder_1 = require$$6;
 	const tr = __importStar(requireToolrunner());
 	/**
@@ -26771,7 +26969,6 @@ function requireExec () {
 	        return runner.exec();
 	    });
 	}
-	exec.exec = exec$1;
 	/**
 	 * Exec a command and get the output.
 	 * Output will be streamed to the live console.
@@ -26783,8 +26980,8 @@ function requireExec () {
 	 * @returns   Promise<ExecOutput>   exit code, stdout, and stderr
 	 */
 	function getExecOutput(commandLine, args, options) {
-	    var _a, _b;
 	    return __awaiter(this, void 0, void 0, function* () {
+	        var _a, _b;
 	        let stdout = '';
 	        let stderr = '';
 	        //Using string decoder covers the case where a mult-byte character is split
@@ -26816,7 +27013,6 @@ function requireExec () {
 	        };
 	    });
 	}
-	exec.getExecOutput = getExecOutput;
 	
 	return exec;
 }
@@ -26843,13 +27039,23 @@ function requirePlatform () {
 		}) : function(o, v) {
 		    o["default"] = v;
 		});
-		var __importStar = (platform && platform.__importStar) || function (mod) {
-		    if (mod && mod.__esModule) return mod;
-		    var result = {};
-		    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-		    __setModuleDefault(result, mod);
-		    return result;
-		};
+		var __importStar = (platform && platform.__importStar) || (function () {
+		    var ownKeys = function(o) {
+		        ownKeys = Object.getOwnPropertyNames || function (o) {
+		            var ar = [];
+		            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+		            return ar;
+		        };
+		        return ownKeys(o);
+		    };
+		    return function (mod) {
+		        if (mod && mod.__esModule) return mod;
+		        var result = {};
+		        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+		        __setModuleDefault(result, mod);
+		        return result;
+		    };
+		})();
 		var __awaiter = (platform && platform.__awaiter) || function (thisArg, _arguments, P, generator) {
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
@@ -26863,7 +27069,8 @@ function requirePlatform () {
 		    return (mod && mod.__esModule) ? mod : { "default": mod };
 		};
 		Object.defineProperty(exports$1, "__esModule", { value: true });
-		exports$1.getDetails = exports$1.isLinux = exports$1.isMacOS = exports$1.isWindows = exports$1.arch = exports$1.platform = void 0;
+		exports$1.isLinux = exports$1.isMacOS = exports$1.isWindows = exports$1.arch = exports$1.platform = void 0;
+		exports$1.getDetails = getDetails;
 		const os_1 = __importDefault(require$$0);
 		const exec = __importStar(requireExec());
 		const getWindowsInfo = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -26918,7 +27125,6 @@ function requirePlatform () {
 		            isLinux: exports$1.isLinux });
 		    });
 		}
-		exports$1.getDetails = getDetails;
 		
 	} (platform));
 	return platform;
@@ -26946,13 +27152,23 @@ function requireCore () {
 		}) : function(o, v) {
 		    o["default"] = v;
 		});
-		var __importStar = (core && core.__importStar) || function (mod) {
-		    if (mod && mod.__esModule) return mod;
-		    var result = {};
-		    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-		    __setModuleDefault(result, mod);
-		    return result;
-		};
+		var __importStar = (core && core.__importStar) || (function () {
+		    var ownKeys = function(o) {
+		        ownKeys = Object.getOwnPropertyNames || function (o) {
+		            var ar = [];
+		            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+		            return ar;
+		        };
+		        return ownKeys(o);
+		    };
+		    return function (mod) {
+		        if (mod && mod.__esModule) return mod;
+		        var result = {};
+		        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+		        __setModuleDefault(result, mod);
+		        return result;
+		    };
+		})();
 		var __awaiter = (core && core.__awaiter) || function (thisArg, _arguments, P, generator) {
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
@@ -26963,12 +27179,33 @@ function requireCore () {
 		    });
 		};
 		Object.defineProperty(exports$1, "__esModule", { value: true });
-		exports$1.platform = exports$1.toPlatformPath = exports$1.toWin32Path = exports$1.toPosixPath = exports$1.markdownSummary = exports$1.summary = exports$1.getIDToken = exports$1.getState = exports$1.saveState = exports$1.group = exports$1.endGroup = exports$1.startGroup = exports$1.info = exports$1.notice = exports$1.warning = exports$1.error = exports$1.debug = exports$1.isDebug = exports$1.setFailed = exports$1.setCommandEcho = exports$1.setOutput = exports$1.getBooleanInput = exports$1.getMultilineInput = exports$1.getInput = exports$1.addPath = exports$1.setSecret = exports$1.exportVariable = exports$1.ExitCode = void 0;
+		exports$1.platform = exports$1.toPlatformPath = exports$1.toWin32Path = exports$1.toPosixPath = exports$1.markdownSummary = exports$1.summary = exports$1.ExitCode = void 0;
+		exports$1.exportVariable = exportVariable;
+		exports$1.setSecret = setSecret;
+		exports$1.addPath = addPath;
+		exports$1.getInput = getInput;
+		exports$1.getMultilineInput = getMultilineInput;
+		exports$1.getBooleanInput = getBooleanInput;
+		exports$1.setOutput = setOutput;
+		exports$1.setCommandEcho = setCommandEcho;
+		exports$1.setFailed = setFailed;
+		exports$1.isDebug = isDebug;
+		exports$1.debug = debug;
+		exports$1.error = error;
+		exports$1.warning = warning;
+		exports$1.notice = notice;
+		exports$1.info = info;
+		exports$1.startGroup = startGroup;
+		exports$1.endGroup = endGroup;
+		exports$1.group = group;
+		exports$1.saveState = saveState;
+		exports$1.getState = getState;
+		exports$1.getIDToken = getIDToken;
 		const command_1 = requireCommand();
 		const file_command_1 = requireFileCommand();
 		const utils_1 = requireUtils$3();
 		const os = __importStar(require$$0);
-		const path = __importStar(require$$1$5);
+		const path = __importStar(require$$1$6);
 		const oidc_utils_1 = requireOidcUtils();
 		/**
 		 * The code to exit an action
@@ -27002,15 +27239,38 @@ function requireCore () {
 		    }
 		    (0, command_1.issueCommand)('set-env', { name }, convertedVal);
 		}
-		exports$1.exportVariable = exportVariable;
 		/**
 		 * Registers a secret which will get masked from logs
-		 * @param secret value of the secret
+		 *
+		 * @param secret - Value of the secret to be masked
+		 * @remarks
+		 * This function instructs the Actions runner to mask the specified value in any
+		 * logs produced during the workflow run. Once registered, the secret value will
+		 * be replaced with asterisks (***) whenever it appears in console output, logs,
+		 * or error messages.
+		 *
+		 * This is useful for protecting sensitive information such as:
+		 * - API keys
+		 * - Access tokens
+		 * - Authentication credentials
+		 * - URL parameters containing signatures (SAS tokens)
+		 *
+		 * Note that masking only affects future logs; any previous appearances of the
+		 * secret in logs before calling this function will remain unmasked.
+		 *
+		 * @example
+		 * ```typescript
+		 * // Register an API token as a secret
+		 * const apiToken = "abc123xyz456";
+		 * setSecret(apiToken);
+		 *
+		 * // Now any logs containing this value will show *** instead
+		 * console.log(`Using token: ${apiToken}`); // Outputs: "Using token: ***"
+		 * ```
 		 */
 		function setSecret(secret) {
 		    (0, command_1.issueCommand)('add-mask', {}, secret);
 		}
-		exports$1.setSecret = setSecret;
 		/**
 		 * Prepends inputPath to the PATH (for this action and future actions)
 		 * @param inputPath
@@ -27025,7 +27285,6 @@ function requireCore () {
 		    }
 		    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
 		}
-		exports$1.addPath = addPath;
 		/**
 		 * Gets the value of an input.
 		 * Unless trimWhitespace is set to false in InputOptions, the value is also trimmed.
@@ -27045,7 +27304,6 @@ function requireCore () {
 		    }
 		    return val.trim();
 		}
-		exports$1.getInput = getInput;
 		/**
 		 * Gets the values of an multiline input.  Each value is also trimmed.
 		 *
@@ -27063,7 +27321,6 @@ function requireCore () {
 		    }
 		    return inputs.map(input => input.trim());
 		}
-		exports$1.getMultilineInput = getMultilineInput;
 		/**
 		 * Gets the input value of the boolean type in the YAML 1.2 "core schema" specification.
 		 * Support boolean input list: `true | True | TRUE | false | False | FALSE` .
@@ -27085,7 +27342,6 @@ function requireCore () {
 		    throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}\n` +
 		        `Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
 		}
-		exports$1.getBooleanInput = getBooleanInput;
 		/**
 		 * Sets the value of an output.
 		 *
@@ -27101,7 +27357,6 @@ function requireCore () {
 		    process.stdout.write(os.EOL);
 		    (0, command_1.issueCommand)('set-output', { name }, (0, utils_1.toCommandValue)(value));
 		}
-		exports$1.setOutput = setOutput;
 		/**
 		 * Enables or disables the echoing of commands into stdout for the rest of the step.
 		 * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
@@ -27110,7 +27365,6 @@ function requireCore () {
 		function setCommandEcho(enabled) {
 		    (0, command_1.issue)('echo', enabled ? 'on' : 'off');
 		}
-		exports$1.setCommandEcho = setCommandEcho;
 		//-----------------------------------------------------------------------
 		// Results
 		//-----------------------------------------------------------------------
@@ -27123,7 +27377,6 @@ function requireCore () {
 		    process.exitCode = ExitCode.Failure;
 		    error(message);
 		}
-		exports$1.setFailed = setFailed;
 		//-----------------------------------------------------------------------
 		// Logging Commands
 		//-----------------------------------------------------------------------
@@ -27133,7 +27386,6 @@ function requireCore () {
 		function isDebug() {
 		    return process.env['RUNNER_DEBUG'] === '1';
 		}
-		exports$1.isDebug = isDebug;
 		/**
 		 * Writes debug message to user log
 		 * @param message debug message
@@ -27141,7 +27393,6 @@ function requireCore () {
 		function debug(message) {
 		    (0, command_1.issueCommand)('debug', {}, message);
 		}
-		exports$1.debug = debug;
 		/**
 		 * Adds an error issue
 		 * @param message error issue message. Errors will be converted to string via toString()
@@ -27150,7 +27401,6 @@ function requireCore () {
 		function error(message, properties = {}) {
 		    (0, command_1.issueCommand)('error', (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
 		}
-		exports$1.error = error;
 		/**
 		 * Adds a warning issue
 		 * @param message warning issue message. Errors will be converted to string via toString()
@@ -27159,7 +27409,6 @@ function requireCore () {
 		function warning(message, properties = {}) {
 		    (0, command_1.issueCommand)('warning', (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
 		}
-		exports$1.warning = warning;
 		/**
 		 * Adds a notice issue
 		 * @param message notice issue message. Errors will be converted to string via toString()
@@ -27168,7 +27417,6 @@ function requireCore () {
 		function notice(message, properties = {}) {
 		    (0, command_1.issueCommand)('notice', (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
 		}
-		exports$1.notice = notice;
 		/**
 		 * Writes info to log with console.log.
 		 * @param message info message
@@ -27176,7 +27424,6 @@ function requireCore () {
 		function info(message) {
 		    process.stdout.write(message + os.EOL);
 		}
-		exports$1.info = info;
 		/**
 		 * Begin an output group.
 		 *
@@ -27187,14 +27434,12 @@ function requireCore () {
 		function startGroup(name) {
 		    (0, command_1.issue)('group', name);
 		}
-		exports$1.startGroup = startGroup;
 		/**
 		 * End an output group.
 		 */
 		function endGroup() {
 		    (0, command_1.issue)('endgroup');
 		}
-		exports$1.endGroup = endGroup;
 		/**
 		 * Wrap an asynchronous function call in a group.
 		 *
@@ -27216,7 +27461,6 @@ function requireCore () {
 		        return result;
 		    });
 		}
-		exports$1.group = group;
 		//-----------------------------------------------------------------------
 		// Wrapper action state
 		//-----------------------------------------------------------------------
@@ -27234,7 +27478,6 @@ function requireCore () {
 		    }
 		    (0, command_1.issueCommand)('save-state', { name }, (0, utils_1.toCommandValue)(value));
 		}
-		exports$1.saveState = saveState;
 		/**
 		 * Gets the value of an state set by this action's main execution.
 		 *
@@ -27244,13 +27487,11 @@ function requireCore () {
 		function getState(name) {
 		    return process.env[`STATE_${name}`] || '';
 		}
-		exports$1.getState = getState;
 		function getIDToken(aud) {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        return yield oidc_utils_1.OidcClient.getIDToken(aud);
 		    });
 		}
-		exports$1.getIDToken = getIDToken;
 		/**
 		 * Summary exports
 		 */
@@ -28857,7 +29098,7 @@ function requireNodeAtob () {
 var nodeAtobExports = requireNodeAtob();
 var Es = /*@__PURE__*/getDefaultExportFromCjs(nodeAtobExports);
 
-var ce="/users/:id",He={},O=class c extends _{constructor(e){var n;let{id:t}=e,{api_url:r}=R$2();super(`${r}${ce}`,He,{id:t},e),this._queryUrl=_.getQueryUrl(ce),this.id=e.id,this.created_at=e.created_at,this.updated_at=e.updated_at,this.has_key=e.has_key,this.display_name=e.display_name,this.email=e.email,this.picture=e.picture,this.roles=(n=e.roles)!=null?n:[];}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${ce}`,{id:r},He,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${ce}`),{},He,e)})}};var pe="/profiles/:id",Lt={},Cr=["id","display_name","email","username","picture","company_type","company_role","company_name","website_url","new_ui","ui_colorscheme","ui_contrast","default_catalog","marketing"],$r=["display_name","username","picture","company_type","company_role","company_name","website_url","new_ui","ui_colorscheme","ui_contrast","default_catalog","marketing"],ue=class c extends _{constructor(e){var r;let{api_url:t}=R$2();super(`${t}${pe}`,Lt,{},e,Cr,$r),this._queryUrl=_.getQueryUrl(pe),this.id=e.id,this.display_name=e.display_name,this.email=e.email,this.username=e.username,this.picture=e.picture,this.company_type=e.company_type,this.company_role=e.company_role,this.company_name=e.company_name,this.website_url=e.website_url,this.new_ui=(r=e.new_ui)!=null?r:true,this.ui_colorscheme=e.ui_colorscheme,this.ui_contrast=e.ui_contrast,this.default_catalog=e.default_catalog,this.marketing=e.marketing,this.billing_contact=e.billing_contact,this.vat_number=e.vat_number;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${pe}`,{id:r},Lt,n)})}static update(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${f(pe,{id:e})}`,i=yield ge(n,"PATCH",t);return new c(i)})}static getUserByUsername(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield ge(`${t}/profiles?filter[username]=${e}`);return new c(r.profiles[0])})}static updateProfilePicture(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return ge(`${r}/profile/${e}/picture`,"POST",t)})}static deleteProfilePicture(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}/profile/${e}/picture`,"DELETE")})}};var se="/profiles/:id/address",Ke={},jr=["country","name_line","premise","sub_premise","thoroughfare","administrative_area","sub_administrative_area","locality","dependent_locality","postal_code"],me=class c extends _{constructor(e){let{id:t}=e,{api_url:r}=R$2();super(`${r}${se}`,Ke,{id:t},e,[],jr),this._queryUrl=c.getQueryUrl(`${r}${se}`,t),this.id=e.id,this.country=e.country,this.name_line=e.name_line,this.premise=e.premise,this.sub_premise=e.sub_premise,this.thoroughfare=e.thoroughfare,this.administrative_area=e.administrative_area,this.sub_administrative_area=e.sub_administrative_area,this.locality=e.locality,this.dependent_locality=e.dependent_locality,this.postal_code=e.postal_code;}static getQueryUrl(e,t){return t?f(e,{id:t}):""}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,this.getQueryUrl(t!=null?t:`${i}${se}`,r),{id:r},Ke,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2(),{id:r}=e;return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${se}`,r),{},Ke,e)})}update(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${se}`;return t&&(n=c.getQueryUrl(n,t)),Xe$1(c.prototype,this,"update").call(this,e,n)})}};var ne="/users/:id",Gt={},Ar=["username","first_name","last_name","email","picture","website","country","company"],Or=["first_name","last_name","username","picture","company","website"],$=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${ne}`,Gt,{},e,Ar,Or),this._queryUrl=_.getQueryUrl(ne),this.id=e.id,this.username=e.username,this.first_name=e.first_name,this.last_name=e.last_name,this.email=e.email,this.email_verified=e.email_verified,this.phone_number_verified=e.phone_number_verified,this.picture=e.picture,this.website=e.website,this.country=e.country,this.company=e.company,this.mfa_enabled=e.mfa_enabled,this.sso_enabled=e.sso_enabled,this.deactivated=e.deactivated,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${ne}`,{id:r},Gt,n)})}static update(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${f(ne,{id:e})}`,i=yield ge(n,"PATCH",t);return new c(i)})}static updateEmailAddress(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${f(ne,{id:e})}/emailaddress`;return ge(n,"POST",{email_address:t})})}static getUserByUsername(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield ge(`${t}/users/username=${e}`);return new c(r)})}};var Vt={},kr="/projects/:projectId/certificates",F=class c extends _{constructor(e,t){var r,n,i,a;super(t,Vt,{},e,["key","certificate","chain"]),this.key=e.key,this.id=e.id,this.certificate=e.certificate,this.chain=(r=e.chain)!=null?r:[],this.domains=(n=e.domains)!=null?n:[],this.expires_at=e.expires_at,this.updated_at=e.updated_at,this.created_at=e.created_at,this.is_provisioned=(i=e.is_provisioned)!=null?i:true,this.issuer=(a=e.issuer)!=null?a:[],this._required=["key","certificate"];}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${kr}`,{projectId:r},Vt,n)})}};var Je="/comments",Wt={},wr=["body","ticket_id","attachments","author_id"],le=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${Je}`,Wt,{},e,wr,[]),this.ticket_id=e.ticket_id,this.id=this.ticket_id,this.comment_id=e.comment_id,this.created_at=e.created_at,this.body=e.body,this.author_id=e.author_id,this.public=e.public,this.attachments=e.attachments;}static query(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${Je}/${e}`,{},Wt,t)})}static send(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${Je}`,"POST",e)})}};var Nt="/users/:userId/connections",ye=class c extends _{constructor(e,t){super(t,{},{},e,[],[]),this.provider=e.provider,this.provider_type=e.provider_type||e.provider,this.subject=e.subject,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${Nt}/:provider`,{userId:e,provider:t})})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${Nt}`,{userId:e},{},{},r=>Array.isArray(r)?r.map(n=>I$2(g$1({},n),{id:n.provider})):[])})}delete(){return p(this,null,function*(){return ge(this._url,"DELETE")})}};var _e={},zr=["services","webapps","workers"],he=class c extends _{constructor(e,t){var r,n,i,a,u,d,_,b;super(t,_e,{},e,[],zr),this.webapps=(r=e.webapps)!=null?r:{},this.services=(n=e.services)!=null?n:{},this.workers=(i=e.workers)!=null?i:{},this.routes=(a=e.routes)!=null?a:{},this.container_profiles=(u=e.container_profiles)!=null?u:{},this.variables=(d=e.variables)!=null?d:[],this.project_info=(_=e.project_info)!=null?_:{},this.environment_info=(b=e.environment_info)!=null?b:{},this.fingerprint=e.fingerprint,this.id=e.id;}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}/projects/:projectId/environments/:environmentId/deployments/current`,{projectId:r,environmentId:n},_e,i)})}static getNext(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}/projects/:projectId/environments/:environmentId/deployments/next`,{projectId:r,environmentId:n},_e,i)})}static getDeployments(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}/projects/:projectId/environments/:environmentId/deployments`,{projectId:r,environmentId:n},_e,i)})}static run(e){return p(this,null,function*(){let{api_url:t}=R$2(),{projectId:r,deploymentId:n,environmentId:i,service:a,operation:u}=e,d={operation:u,service:a},_=`${t}/projects/${r}/environments/${i}/deployments/${n}/operations`;return ge(_,"POST",d).then(b=>p(this,null,function*(){let re=yield new y(b,_).getActivities();if(re.length!==1)throw new Error(`Expected one activity, found ${re.length}`);return re[0]}))})}};var Ye={},qr=["is_default"],Bt="/projects/:projectId/domains",k=class c extends _{constructor(e,t){super(t,Ye,{},e,["name","ssl","is_default"],qr),this.id=e.id,this.name=e.name,this.is_default=e.is_default,this.created_at=e.created_at,this.ssl=e.ssl,this.updated_at=e.updated_at,this._required=["name"];}static get(e,t){return p(this,null,function*(){let u=e,{name:r,projectId:n}=u,i=oe$1(u,["name","projectId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t?`${t}/:name`:`${a}${Bt}`,{name:r,projectId:n},Ye,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${Bt}`,{projectId:r},Ye,n)})}};var Ze="/users",Xe={},w=class c extends _{constructor(e,t=`${Ze}/:id`,r=[]){let{id:n}=e;super(t,Xe,{id:n},e,[],r),this._queryUrl=_.getQueryUrl(t),this.id=n,this.created_at=e.created_at,this.updated_at=e.updated_at,this.has_key=e.has_key,this.display_name=e.display_name,this.email=e.email,this.username=e.username;}static get(e,t,r){return p(this,null,function*(){let u=e,{id:n}=u,i=oe$1(u,["id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${Ze}/:id`,{id:n},Xe,i,r)})}static query(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(t!=null?t:`${r}${Ze}`),{},Xe,e)})}};var Ue={},Tr="admin",Sr="viewer",Er="contributor",Fr=[Tr,Sr,Er],Mr=["user","role","email"],Dr=["role"],Ht="/projects/:projectId/environments/:environmentId/access",j=class c extends _{constructor(e,t){super(t,Ue,{},e,Mr,Dr),this.id=e.id,this.user=e.user,this.email=e.email,this.role=e.role,this.project=e.project,this.environment=e.environment,this._required=["role"];}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t?`${t}/:id`:`${u}${Ht}/:id`;return Xe$1(c,this,"_get").call(this,d,{id:i,projectId:r,environmentId:n},Ue,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${Ht}`,{projectId:r,environmentId:n},Ue,i)})}update(e){return p(this,null,function*(){return Xe$1(c.prototype,this,"update").call(this,e)})}checkProperty(e,t){let r={};return e==="role"&&!Fr.includes(t)&&(r[e]=`Invalid environment role: '${t}'`),r}getLink(e,t=true){return e==="#edit"&&!this.hasLink(e)?this.getUri(t):super.getLink(e,t)}getAccount(){return p(this,null,function*(){return O.get({id:this.id}).then(e=>{if(!e)throw new Error(`Account not found for user: ${this.id}`);return e})})}getUser(){let e=this.getEmbedded("users");if(e)return new w(e[0])}};var Kt="/projects/:projectId/git/blobs/:sha",G=class c extends _{constructor(t,r=Kt,n){var i,a,u,d,_,b;super(r,{},n,t,[],[]);this.type="blob";this.id=(i=t.id)!=null?i:"",this.path=(a=t.path)!=null?a:"",this.sha=(u=t.sha)!=null?u:"",this.size=(d=t.size)!=null?d:"",this.encoding=(_=t.encoding)!=null?_:"",this.content=(b=t.content)!=null?b:"";}static get(t,r){return p(this,null,function*(){let{api_url:n}=R$2();return Xe$1(c,this,"_get").call(this,`${n}${Kt}`,{projectId:t,sha:r})})}getInstance(){return p(this,null,function*(){let t=yield c.get(this._params.projectId,this._params.sha);if(t)return t.path=this.path,t})}decodeBase64(){let t;return Lr?t=Buffer.from(this.content,"base64").toString():t=atob(this.content),t}getRawContent(){return p(this,null,function*(){if(!this.encoding){let t=yield c.get(this._params.projectId,this._params.sha);return t==null?void 0:t.getRawContent()}if(this.encoding==="base64")return this.decodeBase64();throw new Error(`Unrecognised blob encoding: ${this.encoding}`)})}};var Jt="/projects/:projectId/git/trees/:sha",V=class c extends _{constructor(t,r=Jt,n){var i,a,u,d;super(r,{},n,t,[],[]);this.type="tree";this.id=this.id=(i=t.id)!=null?i:"",this.sha=this.sha=(a=t.sha)!=null?a:"",this.path=this.path=(u=t.path)!=null?u:"",this.tree=this.tree=(d=t.tree)!=null?d:[];}static get(t,r){return p(this,null,function*(){let{api_url:n}=R$2(),i=yield Xe$1(c,this,"_get").call(this,`${n}${Jt}`,{projectId:t,sha:r});if(i)return i.tree=c.bind(i==null?void 0:i.tree,t),i})}static bind(t,r){return t.map(n=>{switch(n==null?void 0:n.type){case "tree":return new c(n,void 0,{projectId:r,sha:n.sha});case "blob":return new G(n,void 0,{projectId:r,sha:n.sha});default:return}})}getInstance(){return p(this,null,function*(){let t=yield c.get(this._params.projectId,this.sha);if(t)return t.path=this.path,t.tree=c.bind(t.tree,this._params.projectId),t})}};var Qr="/projects/:projectId/git/commits/:sha",W=class c extends _{constructor(e,t,r){var n,i,a,u,d,_,b;super(t,{},r,e,[],[]),this.id=(n=e.id)!=null?n:"",this.sha=(i=e.sha)!=null?i:"",this.author=(a=e.author)!=null?a:"",this.committer=(u=e.committer)!=null?u:"",this.message=(d=e.message)!=null?d:"",this.tree=(_=e.tree)!=null?_:"",this.parents=(b=e.parents)!=null?b:[];}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${Qr}`,{projectId:e,sha:t})})}getTree(){return p(this,arguments,function*(e=this._params.projectId){return V.get(e,this.tree)})}};var Yt={},Gr="/projects/:projectId/environments/:environmentId/metrics",N=class c extends _{constructor(e,t){var r;super(t,Yt,{},e),this.results=(r=e.results)!=null?r:{};}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${Gr}`,{projectId:r,environmentId:n},Yt,i)})}};var et={},Zt=["route","to","type","upstream","cache"],Xt="/projects/:projectId/environments/:environmentId/routes",R=class c extends _{constructor(e,t){var r,n,i;super(t,et,{},e,Zt,Zt),this.id=e.id,this.project=e.project,this.environment=e.environment,this.route=(r=e.route)!=null?r:{},this.cache=(n=e.cache)!=null?n:{},this.ssi=(i=e.ssi)!=null?i:[],this.upstream=e.upstream,this.to=e.to,this.type=e.type;}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t?`${t}/:id`:`${u}${Xt}/:id`;return Xe$1(c,this,"_get").call(this,d,{id:i,projectId:r,environmentId:n},et,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${Xt}`,{projectId:r,environmentId:n},et,i)})}};var tt={},Vr=["name","value","is_json","is_sensitive","is_inheritable","is_enabled","visible_build","visible_runtime"],Wr=["value","is_json","is_sensitive","is_inheritable","is_enabled","visible_build","visible_runtime"],Ut="/projects/:projectId/environments/:environmentId/variables",z=class c extends _{constructor(e,t){var r,n;super(t!=null?t:"",tt,{},e,Vr,Wr),this.id=e.id,this.name=e.name,this.project=e.project,this.environment=e.environment,this.value=e.value,this.is_enabled=e.is_enabled,this.created_at=e.created_at,this.updated_at=e.updated_at,this.inherited=e.inherited,this.is_json=e.is_json,this.is_sensitive=e.is_sensitive,this.is_inheritable=(r=e.is_inheritable)!=null?r:true,this.visible_build=e.visible_build,this.visible_runtime=(n=e.visible_runtime)!=null?n:true;}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t!=null?t:`${u}${Ut}`;return Xe$1(c,this,"_get").call(this,`${d}/:id`,{id:i},tt,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${Ut}`,{projectId:r,environmentId:n},tt,i)})}disable(){return p(this,null,function*(){return this.is_enabled?this.update({is_enabled:false}):new y({},this._url,c)})}};var rt={projectId:"project"},Br=["parent","enable_smtp","restrict_robots","http_access","title","type"],er="/projects/:projectId/environments",Hr=/^ssh:\/\/([a-zA-Z0-9_-]+)@(.+)$/u,tr="pf:ssh:";var M=class c extends _{constructor(e,t){var r,n,i;super(t,rt,e,e,[],Br),this.id=e.id,this.status=(r=e.status)!=null?r:"inactive",this.head_commit=e.head_commit,this.name=e.name,this.parent=(n=e.parent)!=null?n:null,this.machine_name=e.machine_name,this.restrict_robots=e.restrict_robots,this.title=e.title,this.created_at=e.created_at,this.updated_at=e.updated_at,this.last_active_at=e.last_active_at,this.last_backup_at=e.last_backup_at,this.project=e.project,this.is_dirty=e.is_dirty,this.enable_smtp=e.enable_smtp,this.has_code=e.has_code,this.deployment_target=e.deployment_target,this.deployment_state=e.deployment_state,this.http_access=(i=e.http_access)!=null?i:{},this.is_main=e.is_main,this.type=e.type,this.edge_hostname=e.edge_hostname,this.has_deployment=e.has_deployment;}static get(e,t){return p(this,null,function*(){let d=e,{projectId:r,id:n}=d,i=oe$1(d,["projectId","id"]),{api_url:a}=R$2(),u=t?`${t}/:id`:`${a}${er}/:id`;return Xe$1(c,this,"_get").call(this,u,{project:r,id:n},rt,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${er}`,{project:r},rt,n)})}update(e){return p(this,null,function*(){return Xe$1(c.prototype,this,"update").call(this,e)})}getSshUrl(e=""){let t=this.getSshUrls();return this.hasLink("ssh")&&e===""?this.convertSshUrl(this.getLink("ssh")):t[e]?this.convertSshUrl(t[e]):this.constructLegacySshUrl(e)}constructLegacySshUrl(e=""){let t=e?`--${e}`:"";return this.convertSshUrl(this.getLink("ssh"),t)}convertSshUrl(e,t=""){let r=Hr.exec(e);if(r){let[,n,i]=r;return `${n}${t}@${i}`}}getSshUrls(){let e=this.getLinks();if(!e)return {};let t=Object.keys(e).filter(r=>r.startsWith(tr)).reduce((r,n)=>(r[n.substr(tr.length)]=e[n].href,r),{});return this.hasLink("ssh")&&Object.keys(t).length===0&&(t.ssh=`ssh://${this.constructLegacySshUrl()}`),t}branch(i,a,u){return p(this,arguments,function*(e,t,r,n=this.sanitizeId(e)){let d={name:n,title:e,type:t};return r&&(d.resources={init:r}),this.runLongOperation("branch","POST",d)})}sanitizeId(e){return Nr(e).substr(0,32)}delete(){return p(this,null,function*(){if(this.isActive())throw new Error("Active environments cannot be deleted");return Xe$1(c.prototype,this,"delete").call(this)})}isActive(){return this.status==="active"}activate(){return p(this,null,function*(){if(this.isActive())throw new Error("Active environments cannot be activated");return this.runLongOperation("activate","POST")})}deactivate(){return p(this,null,function*(){if(!this.isActive()&&this.status!=="paused")throw new Error("Inactive environments cannot be deactivated");return this.runLongOperation("deactivate","POST")})}merge(e){return p(this,null,function*(){if(!this.parent)throw new Error("The environment does not have a parent, so it cannot be merged");return this.runLongOperation("merge","POST",e)})}synchronize(e,t,r){return p(this,null,function*(){if(!e&&!t&&!r)throw new Error("Nothing to synchronize: you must specify data, code or resources");let n={synchronize_data:e,synchronize_code:t};return typeof r!="undefined"&&(n.synchronize_resources=r),this.runLongOperation("synchronize","post",n)})}backup(e=true){return p(this,null,function*(){return this.runLongOperation("backup","POST",{safe:e})})}redeploy(){return p(this,null,function*(){return this.runLongOperation("redeploy")})}resume(){return p(this,null,function*(){return this.runLongOperation("resume")})}pause(){return p(this,null,function*(){return this.runLongOperation("pause")})}getActivity(e){return p(this,null,function*(){return L$1.get({id:e},`${this.getUri()}/activities`)})}getActivities(e,t){return p(this,null,function*(){let r={type:e,starts_at:t};return L$1.query(r,`${this.getUri()}/activities`)})}getVariables(e){return p(this,null,function*(){return z.query({projectId:this.project,environmentId:this.id,limit:e},this.getLink("#manage-variables"))})}setVariable(e,t,r=false,n=true,i=true,a=false,u=true,d=true){return p(this,null,function*(){let _={name:e,value:t,is_json:r,is_enabled:n,is_inheritable:i,is_sensitive:a,visible_build:u,visible_runtime:d};return this.getVariable(e).then(b=>p(this,null,function*(){if(b!=null&&b.id)return b.update(_)})).catch(b=>b.code===404?(_.name=e,new z(_,this.getLink("#manage-variables")).save()):b)})}getVariable(e){return p(this,null,function*(){return z.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-variables"))})}setRoute(e){return p(this,null,function*(){return e.id?this.getRoute(e.id).then(t=>p(this,null,function*(){return t!=null&&t.id?t.update(e,`${this.getLink("#manage-routes")}/${encodeURIComponent(t.id)}`):new R(e,this.getLink("#manage-routes")).save()})):new R(e,this.getLink("#manage-routes")).save()})}getRoute(e){return p(this,null,function*(){return R.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-routes"))})}getRoutes(){return p(this,null,function*(){return R.query({projectId:this.project,environmentId:this.id},this.getLink("#manage-routes"))})}getRouteUrls(){let e=this.getLinks();if(!e)return [];let t=e["pf:routes"];return !t||!Array.isArray(t)?[]:t.map(r=>r.href)}initialize(e,t){return p(this,null,function*(){return this.runLongOperation("initialize","post",{profile:e,repository:t})})}getUser(e){return p(this,null,function*(){return j.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-access"))})}getUsers(){return p(this,null,function*(){return j.query({projectId:this.project,environmentId:this.id},this.getLink("#manage-access"))})}addUser(e,t,r=true){return p(this,null,function*(){let i={id:"",role:t,[r?"user":"email"]:e};return new j(i,this.getLink("#manage-access")).save()})}removeUser(e){return p(this,null,function*(){return j.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-access")).then(t=>p(this,null,function*(){return t==null?void 0:t.delete()}))})}getMetrics(e){return p(this,null,function*(){let t=e?{q:e}:{};return N.get(t,`${this.getUri()}/metrics`)})}getHeadCommit(){return p(this,null,function*(){return W.get(this.project,this.head_commit)})}};var st={},rr="/projects/:projectId/environments/:environmentId/backups",be=class c extends _{constructor(e,t){var r,n;super(t,st,{},e,[],[]),this.id=e.id,this.created_at=e.created_at,this.updated_at=e.updated_at,this.attributes=(r=e.attributes)!=null?r:{},this.status=e.status,this.expires_at=e.expires_at,this.index=e.index,this.commit_id=e.commit_id,this.environment=e.environment,this.safe=(n=e.safe)!=null?n:true,this.restorable=e.restorable,this.automated=e.automated,this.size_of_volumes=e.size_of_volumes,this.size_used=e.size_used;}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t?`${t}/:id`:`${u}${rr}/:id`;return Xe$1(c,this,"_get").call(this,d,{id:i,projectId:r,environmentId:n},st,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${rr}`,{projectId:r,environmentId:n},st,i)})}restore(e){return p(this,null,function*(){return this.runLongOperation("restore","POST",e)})}};var nt={},Kr=["is_default"],sr="/projects/:projectId/environments/:environmentId/domains",D=class c extends _{constructor(e,t){super(t,nt,{},e,["name","ssl","is_default","replacement_for"],Kr),this.id=e.id,this.name=e.name,this.is_default=e.is_default,this.created_at=e.created_at,this.ssl=e.ssl,this.updated_at=e.updated_at,this.replacement_for=e.replacement_for,this._required=["name"];}static get(e,t){return p(this,null,function*(){let d=e,{name:r,projectId:n,environmentId:i}=d,a=oe$1(d,["name","projectId","environmentId"]),{api_url:u}=R$2();return Xe$1(c,this,"_get").call(this,t?`${t}/:name`:`${u}${sr}`,{name:r,projectId:n,environmentId:i},nt,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${sr}`,{projectId:r,environmentId:n},nt,i)})}};var Yr={},Zr="admin",Xr="viewer",Ur=[Zr,Xr],es=["role","user","email"],ts=["role"],rs="/projects/:projectId/access",P=class c extends _{constructor(e,t){super(t,Yr,{},e,es,ts),this._required=["email"],this.id=e.id,this.email=e.email,this.role=e.role,this.user=e.user;}static query(e,t){return p(this,null,function*(){let{projectId:r}=e,{api_url:n}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${n}${rs}`,{projectId:r})})}getAccount(){return p(this,null,function*(){return O.get({id:this.user}).then(e=>{if(!e)throw new Error(`Account not found for user: ${this.id}`);return e})})}getUser(){let e=this.getEmbedded("users");return new w(e[0])}checkProperty(e,t){let r={};return e==="email"&&!Jr.validate(t)?r[e]=`Invalid email address: '${t}'`:e==="role"&&!Ur.includes(t)&&(r[e]=`Invalid role: '${t}'`),r}};var it="/projects/:projectId/environment-types/:id",ot={},fe=class c extends _{constructor(e){var n;let{id:t}=e,{api_url:r}=R$2();super(`${r}${it}`,ot,{id:t},e),this.id=e.id,this.accesses=(n=e.accesses)!=null?n:[];}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${it}`,{id:r},ot,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2(),i=e,{projectId:r}=i,n=oe$1(i,["projectId"]);return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${it}`),{projectId:r},ot,n)})}static createAccess(e){return p(this,null,function*(){let{projectId:t,environmentTypeId:r,email:n,role:i,user:a}=e,{api_url:u}=R$2(),d=`${u}/projects/${t}/environment-types/${r}/access`,_=yield ge(d,"POST",{email:n,role:i,user:a});return new P(_._embedded.entity,d)})}static updateAccess(e){return p(this,null,function*(){let{projectId:t,environmentTypeId:r,accessId:n,role:i}=e,{api_url:a}=R$2(),u=`${a}/projects/${t}/environment-types/${r}/access/${n}`,d=yield ge(u,"PATCH",{role:i});return new P(d._embedded.entity,u)})}static deleteAccess(e){return p(this,null,function*(){let{projectId:t,environmentTypeId:r,accessId:n}=e,{api_url:i}=R$2();return ge(`${i}/projects/${t}/environment-types/${r}/access/${n}`,"DELETE")})}getAccesses(){return p(this,null,function*(){let e=this.getLink("#access"),t=yield ge(e);this.accesses=[];for(let r of t)this.accesses.push(new P(r,`${e}/${r.id}`));return this.accesses})}};var at={},ss=["bitbucket","bitbucket_server","github","gitlab","hipchat","webhook","health.email","health.pagerduty","health.slack","health.webhook","script","syslog","splunk","sumologic","newrelic","httplog"],nr=["headers","host","port","protocol","facility","message_format","auth_mode","tls_verify","auth_token","index","sourcetype","addon_credentials","app_credentials","base_url","category","channel","from_address","license_key","project","recipients","repository","resync_pull_requests","room","routing_key","shared_key","script","token","url","username","events","environments","excluded_environments","states","build_draft_pull_requests","build_merge_requests","build_pull_requests","build_pull_requests_post_merge","build_wip_merge_requests","fetch_branches","merge_requests_clone_parent_data","prune_branches","pull_requests_clone_parent_data"],ir="/projects/:projectId/integrations",q=class c extends _{constructor(e,t){super(t,at,e,e,nr.concat("type"),nr),this.id=e.id,this.type=e.type,this.token_type=e.token_type,this.app_credentials=e.app_credentials,this.addon_credentials=e.addon_credentials,this.repository=e.repository,this.fetch_branches=e.fetch_branches,this.prune_branches=e.prune_branches,this.build_pull_requests=e.build_pull_requests,this.resync_pull_requests=e.resync_pull_requests,this.url=e.url,this.username=e.username,this.project=e.project,this.pull_requests_clone_parent_data=e.pull_requests_clone_parent_data,this.environments_credentials=e.environments_credentials,this.supported_runtimes=e.supported_runtimes,this.events=e.events,this.environments=e.environments,this.excluded_environments=e.excluded_environments,this.states=e.states,this.result=e.result,this.service_id=e.service_id,this.base_url=e.base_url,this.build_draft_pull_requests=e.build_draft_pull_requests,this.build_pull_requests_post_merge=e.build_pull_requests_post_merge,this.build_wip_merge_requests=e.build_wip_merge_requests,this.build_merge_requests=e.build_merge_requests,this.merge_requests_clone_parent_data=e.merge_requests_clone_parent_data,this.from_address=e.from_address,this.recipients=e.recipients,this.routing_key=e.routing_key,this.channel=e.channel,this.room=e.room,this.tls_verify=e.tls_verify,this.script=e.script,this.index=e.index,this.sourcetype=e.sourcetype,this.category=e.category,this.host=e.host,this.port=e.port,this.protocol=e.protocol,this.facility=e.facility,this.message_format=e.message_format,this.headers=e.headers,this.shared_key=e.shared_key,this.token=e.token,this._required=["type"];}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,id:n}=u,i=oe$1(u,["projectId","id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t?`${t}/:id`:`${a}${ir}/:id`,{projectId:r,id:n},at,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${ir}`,{projectId:r},at,n)})}checkProperty(e,t){let r={};return e==="type"&&!ss.includes(t)&&(r[e]=`Invalid type: '${t}'`),r}getActivity(e){return p(this,null,function*(){return L$1.get({id:e},`${this.getUri()}/activities`)})}getActivities(e,t){return p(this,null,function*(){let r={type:e,starts_at:t};return L$1.query(r,`${this.getUri()}/activities`)})}triggerHook(){return p(this,null,function*(){let e=this.getLink("#hook");return N$1(e,"post")})}};var ar="/projects/:projectId/invitations",or=`${ar}/:id`,ns=["projectId","environments","permissions","role","email","force"],ve=class c extends _{constructor(e,t){var a,u,d;let{projectId:r,id:n}=e,{api_url:i}=R$2();super(t!=null?t:`${i}${or}`,{},{projectId:r,id:n},e,ns,[]),this._queryUrl=_.getQueryUrl(this._url),this.id=e.id,this.owner=(a=e.owner)!=null?a:{},this.projectId=e.projectId,this.environments=(u=e.environments)!=null?u:[],this.permissions=(d=e.permissions)!=null?d:[],this.state=e.state,this.email=e.email,this.role=e.role,this.force=e.force,this.created_at=e.created_at,this.updated_at=e.updated_at,this.finished_at=e.finished_at;}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${or}`,{id:t,projectId:e})})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${ar}`,{projectId:e},{},{},r=>Array.isArray(r)?r.map(n=>g$1({projectId:e},n)):[])})}delete(){return p(this,null,function*(){return ge(this._url,"DELETE")})}};var cr="/organizations/:organizationId/discounts",is={},os=["code"],B=class c extends _{constructor(e,t){var n;let{api_url:r}=R$2();super(t!=null?t:`${r}${cr}`,is,{},e,os),this.items=(n=e.items)!=null?n:[],this.code=e.code;}static get(e,t){return p(this,null,function*(){let a=e,{organizationId:r}=a,n=oe$1(a,["organizationId"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${cr}`,{organizationId:r},{},n)})}};var ct=class{constructor(e,t,r){this.baseUrl=e,this.links=t,this.DataType=r;}getPage(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield ge(b(this.links,e,true,t));return new ie(this.baseUrl,r==null?void 0:r.items,r==null?void 0:r._links,this.DataType)})}next(){return p(this,null,function*(){return this.getPage("next")})}previous(){return p(this,null,function*(){return this.getPage("Previous")})}getUser(){return p(this,null,function*(){return this.getRef("ref:users:0",$)})}getUsers(){return p(this,null,function*(){return this.getRefs("ref:users",$)})}getRef(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return O$1(this.links,e,t,true,r)})}getRefs(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return w$1(this.links,e,t,true,r)})}hasMore(){return !!T$1(this.links,"next")}},ie=class{constructor(e,t,r,n){this.baseUrl=e,this.items=t==null?void 0:t.map(i=>new n(i,`${e}/${i.id}`)),this.links=r,this.DataType=n,this.linksManager=new ct(this.baseUrl,r,n);}getLinksManager(){return this.linksManager}getItems(){return this.items}};var T=class extends _{static queryCursoredResult(e,t,r,n,i,a){return p(this,null,function*(){let u=f(e,t,r),d=yield ge(u,"GET",n,{},0,a);return new ie(u,d==null?void 0:d.items,d==null?void 0:d._links,i)})}};var pt={},ut="/organizations/:organizationId/members",as=["user_id","permissions"],cs=["permissions"],L=class c extends T{constructor(e,t){var i;let{organizationId:r}=e,{api_url:n}=R$2();super(t!=null?t:`${n}${ut}`,pt,{organizationId:r},e,as,cs),this.id=e.id,this.user_id=e.user_id,this.organization_id=r,this.permissions=(i=e.permissions)!=null?i:[],this.owner=e.owner,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let u=e,{organizationId:r,id:n}=u,i=oe$1(u,["organizationId","id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${ut}/:id`,{organizationId:r,id:n},pt,i)})}static query(e,t){return p(this,null,function*(){let a=e,{organizationId:r}=a,n=oe$1(a,["organizationId"]),{api_url:i}=R$2();return Xe$1(c,this,"queryCursoredResult").call(this,t!=null?t:`${i}${ut}`,{organizationId:r},pt,n,c)})}delete(){return p(this,null,function*(){return Xe$1(c.prototype,this,"delete").call(this,this.getLink("delete"))})}getUser(){return p(this,null,function*(){return this.getRef("ref:users:0",$)})}};var mt={id:"name"},ps=["name","value","is_json","is_sensitive","visible_build","visible_runtime"],us=["value","is_json","is_sensitive","visible_build","visible_runtime"],pr="/projects/:projectId/variables",S=class c extends _{constructor(e,t){var r;super(t,mt,{},e,ps,us),this.id=e.id,this.name=e.name,this.value=e.value,this.is_json=e.is_json,this.is_sensitive=e.is_sensitive,this.visible_build=e.visible_build,this.visible_runtime=(r=e.visible_runtime)!=null?r:true,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let d=e,{name:r,projectId:n}=d,i=oe$1(d,["name","projectId"]),{api_url:a}=R$2(),u=t!=null?t:`${a}${pr}`;return Xe$1(c,this,"_get").call(this,`${u}/:id`,{name:r,projectId:n},mt,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${pr}`,{projectId:r},mt,n)})}};var mr={},gs=["default_domain","title","default_branch","timezone"],Pe,H=class c extends _{constructor(e,t){var r,n;super(t,mr,{},e,[],gs),this._queryUrl=_.getQueryUrl(t),this.id=e.id,this.cluster=e.cluster,this.cluster_label=e.cluster_label,this.title=e.title,this.created_at=e.created_at,this.updated_at=e.updated_at,this.name=e.name,this.owner=e.owner,this.owner_info=(r=e.owner_info)!=null?r:{},this.plan=e.plan,this.plan_uri=e.plan_uri,this.hipaa=e.hipaa,this.enterprise_tag=e.enterprise_tag,this.subscription=e.subscription,this.subscription_id=e.subscription_id,this.environment_id=e.environment_id,this.status=e.status,this.endpoint=e.endpoint,this.repository=e.repository,this.region=e.region,this.region_label=e.region_label,this.vendor=e.vendor,this.vendor_label=e.vendor_label,this.vendor_resources=e.vendor_resources,this.vendor_website=e.vendor_website,this.default_domain=e.default_domain,this.organization_id=(n=e.organization_id)!=null?n:e.organization,this.default_branch=e.default_branch,this.timezone=e.timezone;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}/projects/:id`,{id:r},mr,n)})}getSubscriptionId(){var e;if(this.subscription_id)return this.subscription_id;if((e=this.subscription)!=null&&e.license_uri)return require$$1$5.basename(this.subscription.license_uri,require$$1$5.extname(this.subscription.license_uri));throw new Error("Subscription ID not found")}getGitUrl(){if(!this.repository){let e=ms(this.getUri());return `${this.id}@git.${e==null?void 0:e[3]}:${this.id}.git`}return this.repository.url}getUsers(){return p(this,null,function*(){return P.query({projectId:this.id},this.getLink("#access"))})}addUser(e,t,r=false){return p(this,null,function*(){let i={role:t,[r?"user":"email"]:e};return new P(i,this.getLink("access")).save()})}getEnvironment(e){return p(this,null,function*(){return M.get({projectId:this.id,id:e},this.getLink("environments"))})}getLink(e,t=true){return this.hasLink(e)?super.getLink(e,t):e==="self"||e==="#edit"?this.endpoint:e==="#manage-variables"?`${this.getUri()}/variables`:`${this.getUri()}/${e.trim().replace("#","")}`}getEnvironments(e){return p(this,null,function*(){return M.query({projectId:this.id,limit:e},this.getLink("environments"))})}getDomains(e){return p(this,null,function*(){return k.query({projectId:this.id,limit:e},this.getLink("domains"))})}getEnvironmentDomains(e){return p(this,null,function*(){return D.query({projectId:this.id,environmentId:e},this.getLink(`environments/${e}/domains`))})}addEnvironmentDomain(e,t,r,n){return p(this,null,function*(){let i={name:e,replacement_for:r};return n!=null&&n.length&&(i.ssl=n),r?i.replacement_for=r:i.is_default=true,r||(i.is_default=true),new D(i,this.getLink(`environments/${t}/domains`)).save()})}getDomain(e){return p(this,null,function*(){return k.get({name:e},this.getLink("domains"))})}addDomain(r){return p(this,arguments,function*(e,t=[]){let n={name:e};return t.length&&(n.ssl=t),new k(n,this.getLink("domains")).save()})}getIntegrations(e){return p(this,null,function*(){return q.query({projectId:this.id,limit:e},this.getLink("integrations"))})}getIntegration(e){return p(this,null,function*(){return q.get({projectId:this.id,id:e},this.getLink("integrations"))})}addIntegration(e,t){return p(this,null,function*(){let r=g$1({type:e},t);return new q(r,this.getLink("integrations")).save()})}getActivity(e){return p(this,null,function*(){return L$1.get({id:e},`${this.getUri()}/activities`)})}getActivities(e,t){return p(this,null,function*(){let r=t==null?void 0:t.toISOString(),n={type:e,starts_at:r};return L$1.query(n,`${this.getUri()}/activities`)})}isSuspended(){return this.status==="suspended"}getVariables(e){return p(this,null,function*(){return S.query({projectId:this.id,limit:e},this.getLink("#manage-variables"))})}setVariable(e,t,r=false,n=false,i=true,a=true){return p(this,null,function*(){let u={name:e,value:t,is_json:r,is_sensitive:n,visible_build:i,visible_runtime:a};return this.getVariable(e).then(d=>p(this,null,function*(){if(d!=null&&d.name)return d.update(u)})).catch(d=>d.code===404?(u.name=e,new S(u,this.getLink("#manage-variables")).save()):d)})}getVariable(e){return p(this,null,function*(){return S.get({projectId:this.id,name:e},this.getLink("#manage-variables"))})}getCertificates(){return p(this,null,function*(){return F.query({},`${this.getUri()}/certificates`)})}addCertificate(n,i){return p(this,arguments,function*(e,t,r=[]){return new F({certificate:e,key:t,chain:r},`${this.getUri()}/certificates`).save()})}subscribe(){return p(this,null,function*(){Pe&&Pe.close();let{api_url:e}=R$2();return ct$1(`${e}/projects/${this.id}/subscribe`).then(t=>(Pe=t,Pe))})}loadTheme(){return p(this,null,function*(){return fetch(`${this.vendor_resources}/vendor.json`).then(e=>p(this,null,function*(){return e.json()})).then(e=>g$1({logo:`${this.vendor_resources}/images/logo.svg`,smallLogo:`${this.vendor_resources}/images/logo-ui.svg`,emailLogo:`${this.vendor_resources}/images/logo-email.png`},e))})}getCapabilities(){return p(this,null,function*(){return ge(this.getLink("capabilities"))})}};var gt={},ls=["project_region","plan","project_title","storage","environments","options_url","vendor","options_custom","default_branch"],ys=["plan","environments","storage","big_dev","backups","blackfire","observability_suite","continuous_profiling"],xe="/subscriptions/:id",_s=["development","standard","medium","large"],hs=["eu.platform.sh","us.platform.sh"];var K=class c extends _{constructor(e,t){var n,i,a,u,d,_$1,b;let{api_url:r}=R$2();super(t!=null?t:`${r}${xe}`,gt,e,e,ls,ys),this.green=(n=e.green)!=null?n:false,this._queryUrl=_.getQueryUrl(t!=null?t:`${r}${xe}`),this._required=["project_region"],this.id=e.id,this.status=(i=e.status)!=null?i:"provisioning Failure",this.owner=e.owner,this.plan=e.plan,this.environments=e.environments,this.storage=e.storage,this.big_dev=e.big_dev,this.backups=e.backups,this.user_licenses=e.user_licenses,this.project_id=e.project_id,this.project_title=e.project_title,this.project_region=e.project_region,this.project_region_label=e.project_region_label,this.project_ui=e.project_ui,this.vendor=e.vendor,this.owner_info=(a=e.owner_info)!=null?a:{type:""},this.organization=e.organization,this.created_at=e.created_at,this.updated_at=e.updated_at,this.users_licenses=e.users_licenses,this.license_uri=e.license_uri,this.organization_id=e.organization_id,this.project_options=(u=e.project_options)!=null?u:{plan_title:{},sellables:{blackfire:{products:[],available:false},observability_suite:{products:[],available:false}},initialize:{}},this.resources=e.resources,this.resources_limit=(d=e.resources_limit)!=null?d:{limit:{},used:{projects:[],totals:{}}},this.enterprise_tag=e.enterprise_tag,this.support_tier=e.support_tier,this.blackfire=e.blackfire,this.observability_suite=e.observability_suite,this.environment_options=(_$1=e.environment_options)!=null?_$1:[],this.continuous_profiling=(b=e.continuous_profiling)!=null?b:null,this.options_url=e.options_url,this.options_custom=e.options_custom,this.default_branch=e.default_branch;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${xe}`,{id:r},gt,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${xe}`),{},gt,e,r=>r.subscriptions)})}static getAvailablePlans(){return _s}static getAvailableRegions(){return hs}wait(e,t=2){return p(this,null,function*(){let r=t*1e3;return new Promise(n=>{let i=setInterval(()=>{if(!this.isPending()){n(this),clearInterval(i);return}this.refresh().then(()=>{e&&e(this);});},r);})})}checkProperty(e,t){let r={};return e==="storage"&&typeof t=="number"&&t<1024?r[e]="Storage must be at least 1024 MiB":e==="activation_callback"&&typeof t!="number"&&(t!=null&&t.uri?ds(t.uri)||(r[e]="Invalid URI in activation callback"):r[e]="A 'uri' key is required in the activation callback"),r}isPending(){let e=this.getStatus();return e==="provisioning"||e==="requested"}isActive(){return this.getStatus()==="active"}getStatus(){return this.status}getProject(){return p(this,null,function*(){if(!this.hasLink("project")&&!this.isActive())throw new Error("Inactive subscriptions do not have projects.");return H.get({id:this.project_id},this.getLink("project"))})}getEstimate(e){return p(this,null,function*(){var r,n,i,a,u,d;let t=g$1({plan:(r=e==null?void 0:e.plan)!=null?r:this.plan,storage:(n=e==null?void 0:e.storage)!=null?n:this.storage,environments:(i=e==null?void 0:e.environments)!=null?i:this.environments,user_licenses:(a=e==null?void 0:e.user_licenses)!=null?a:this.users_licenses,big_dev:(u=this.big_dev)!=null?u:void 0,backups:(d=this.backups)!=null?d:void 0,format:e==null?void 0:e.format},e);return ge(`${this._queryUrl}/${this.id}/estimate`,"GET",t)})}wrap(e){return _.wrap(e!=null&&e.subscriptions?e.subscriptions:[])}operationAvailable(e){return e==="edit"?true:super.operationAvailable(e)}getLink(e,t=true){return e==="#edit"||e==="#delete"?this.getUri(t):super.getLink(e,t)}copy(e={}){var t;super.copy(((t=e.subscriptions)==null?void 0:t[0])||e);}};var dt="/organizations/:organizationId/subscriptions/:id",J=class c extends K{constructor(e,t){let{organizationId:r}=e,{api_url:n}=R$2(),i=f(t!=null?t:`${n}${dt}`,{organizationId:r},{});super(e,i),this._required=["project_region","organization_id"],this._creatableField.push("organizationId"),this.agency_site=e.agency_site,this.big_dev_service=e.big_dev_service,this.fastly_service_ids=e.fastly_service_ids,this.hipaa=e.hipaa,this.invoiced=e.invoiced,this.is_trial_plan=e.is_trial_plan,this.locked=e.locked,this.project_notes=e.project_notes,this.services=e.services;}static get(e,t){return p(this,null,function*(){let u=e,{organizationId:r,id:n}=u,i=oe$1(u,["organizationId","id"]),{api_url:a}=R$2();return _._get.call(this,t!=null?t:`${a}${dt}`,{organizationId:r,id:n},{},i)})}static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return T.queryCursoredResult(this.getQueryUrl(`${n}${dt}`),{organizationId:t},{},r,c,{queryStringArrayPrefix:"[]"})})}static getCanCreate(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}/organizations/${e.organizationId}/subscriptions/can-create`,"GET")})}getOrganizations(){return p(this,null,function*(){return this.getRefs("ref:organizations",E)})}};var lt="/organizations/:organizationId/vouchers",bs={},fs=["code"],Q=class c extends _{constructor(e,t){var n,i;let{api_url:r}=R$2();super(t!=null?t:`${r}${lt}`,bs,{},e,fs),this.code=e.code,this.currency=e.currency,this.discounted_orders=(n=e.discounted_orders)!=null?n:[],this.vouchers=(i=e.vouchers)!=null?i:[],this.vouchers_applied=e.vouchers_applied,this.vouchers_remaining_balance=e.vouchers_remaining_balance,this.vouchers_total=e.vouchers_total;}static get(e,t){return p(this,null,function*(){let a=e,{organizationId:r}=a,n=oe$1(a,["organizationId"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${lt}`,{organizationId:r},{},n)})}static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return Xe$1(c,this,"_query").call(this,`${n}${lt}`,{organizationId:t},{},r,a=>a.vouchers)})}};var yt={},Ie="/organizations",vs="/users/:userId/organizations",Ps=["name","label","country"],xs=["name","label","country"],E=class c extends _{constructor(e,t){var n;let{api_url:r}=R$2();super(t!=null?t:`${r}${Ie}/:id`,yt,{},e,Ps,xs),this.id=e.id,this.user_id=e.user_id,this.name=e.name,this.label=e.label,this.country=e.country,this.owner_id=e.owner_id,this.created_at=e.created_at,this.updated_at=e.updated_at,this.capabilities=(n=e.capabilities)!=null?n:[],this.status=e.status,this.vendor=e.vendor,this._queryUrl=t!=null?t:`${r}${Ie}`;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${Ie}/:id`,{id:r},yt,n)})}static query(){return p(this,arguments,function*(e={},t){let{api_url:r}=R$2(),u=e,{userId:n}=u,i=oe$1(u,["userId"]),a=`${r}${Ie}`;return n&&(a=`${r}${vs}`),Xe$1(c,this,"_query").call(this,t!=null?t:a,{userId:n},yt,i,d=>Array.isArray(d)?[]:d==null?void 0:d.items)})}getMembers(){return p(this,null,function*(){return L.query({organizationId:this.id})})}addMember(e){return p(this,null,function*(){return new L(g$1({organizationId:this.id},e)).save()})}getDiscounts(){return p(this,null,function*(){return B.get({organizationId:this.id})})}getVouchers(){return p(this,null,function*(){return Q.get({organizationId:this.id})})}addVoucher(e){return p(this,null,function*(){let{api_url:t}=R$2();return new Q({organizationId:this.id,code:e},`${t}/organizations/${this.id}/vouchers/apply`).save()})}getEstimate(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=`${t}/organizations/${this.id}/estimate`;return ge(r,"GET",e)})}getLink(e,t=true){return this.hasLink(e)?super.getLink(e,t):""}delete(){return p(this,null,function*(){return Xe$1(c.prototype,this,"delete").call(this,this.getLink("delete"))})}addSubscription(e){return p(this,null,function*(){return new J(I$2(g$1({},e),{organizationId:this.id})).save()})}getWizardSteps(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=`${t}/organizations/${this.id}/setup/wizard/${e.template}`;return ge(r,"GET")})}};var Ce="/me",Is=["picture","mail","display_name","username","newsletter","plaintext","company_role","company_type","website","ssh_keys"],$e=class c extends w{constructor(e){var r,n,i,a,u,d;let{api_url:t}=R$2();super(e,`${t}${Ce}`,Is),this.projects=(r=e.projects)!=null?r:[],this.ssh_keys=(n=e.ssh_keys)!=null?n:[],this.roles=(i=e.roles)!=null?i:[],this.teams=(a=e.teams)!=null?a:[],this.picture=e.picture,this.newsletter=e.newsletter,this.plaintext=e.plaintext,this.website=e.website,this.company_role=e.company_role,this.company_type=e.company_type,this.mail=e.mail,this.trial=e.trial,this.uuid=e.uuid,this.current_trial=(u=e.current_trial)!=null?u:{},this.stripe=(d=e.stripe)!=null?d:{public_key:""};}static get(e=false){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}${Ce}`,{},{},{},{cache:e?"reload":"default"})})}update(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield Xe$1(c.prototype,this,"update").call(this,e,`${t}/profiles/:id`);return new y(new c(r.data))})}phone(e=false){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${Ce}/phone?${e?"force_refresh=1":""}`,"POST")})}kycVerification(e=false){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${Ce}/verification?${e?"force_refresh=1":""}`,"POST")})}getOrganizations(){return p(this,null,function*(){return this.getRefs("ref:organizations",E)})}};var _t="/orders/:id",ht={},Y=class c extends _{constructor(e){var n,i,a;let{id:t}=e,{api_url:r}=R$2();super(`${r}${_t}`,ht,{id:t},e),this.id=t,this.status=e.status,this.owner=e.owner,this.address=(n=e.address)!=null?n:{},this.vat_number=e.vat_number,this.billing_period_start=e.billing_period_start,this.billing_period_end=e.billing_period_end,this.last_refreshed=e.last_refreshed,this.total=e.total,this.total_formatted=e.total_formatted,this.components=(i=e.components)!=null?i:{},this.currency=e.currency,this.invoice_url=e.invoice_url,this.line_items=(a=e.line_items)!=null?a:[],this.billing_period_label=e.billing_period_label;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${_t}`,{id:r},ht,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${_t}`),{},ht,e,r=>r==null?void 0:r.commerce_order)})}};var Z="/organizations/:organizationId/address",bt={},Cs=["country","name_line","premise","sub_premise","thoroughfare","administrative_area","sub_administrative_area","locality","dependent_locality","postal_code"],je=class c extends _{constructor(e,t){let{id:r}=e,{api_url:n}=R$2();super(t!=null?t:`${n}${Z}`,bt,{id:r},e,[],Cs),this._queryUrl=_.getQueryUrl(`${n}${Z}`),this.id=e.id,this.country=e.country,this.name_line=e.name_line,this.premise=e.premise,this.sub_premise=e.sub_premise,this.thoroughfare=e.thoroughfare,this.administrative_area=e.administrative_area,this.sub_administrative_area=e.sub_administrative_area,this.locality=e.locality,this.dependent_locality=e.dependent_locality,this.postal_code=e.postal_code;}static getQueryUrl(e,t){return f(e,{id:t})}static get(e,t){return p(this,null,function*(){let d=e,{organizationId:r,id:n}=d,i=oe$1(d,["organizationId","id"]),{api_url:a}=R$2(),u=t!=null?t:`${a}${Z}`;return n&&(u=this.getQueryUrl(t!=null?t:`${a}${Z}`,n)),Xe$1(c,this,"_get").call(this,u,{organizationId:r,id:n},bt,i)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2(),{organizationId:r}=e;return Xe$1(c,this,"_get").call(this,`${t}${Z}`,{organizationId:r},bt,e)})}update(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c.prototype,this,"update").call(this,e,f(`${r}${Z}`,{organizationId:t},{}))})}};var ft="/organizations/:organizationId/invitations",gr=`${ft}/:id`,$s=["permissions","email","force"],Re=class c extends _{constructor(e,t){var a,u;let{organizationId:r,id:n}=e,{api_url:i}=R$2();super(t!=null?t:`${i}${gr}`,{},{organizationId:r,id:n},e,$s,[]),this._queryUrl=_.getQueryUrl(this._url),this.id=n,this.owner=(a=e.owner)!=null?a:{},this.organization_id=r,this.permissions=(u=e.permissions)!=null?u:[],this.state=e.state,this.email=e.email,this.force=e.force;}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${gr}`,{id:t,organizationId:e})})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${ft}`,{organizationId:e},{},{})})}static getList(e,t=""){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,`${r}${ft}?${t}`,{organizationId:e},{},{})})}delete(){return p(this,null,function*(){let{api_url:e}=R$2();return Xe$1(c.prototype,this,"delete").call(this,`${e}/organizations/${this.organization_id}/invitations/${this.id}`)})}};var dr="/organizations/:organizationId/orders/:id",Ae=class extends Y{static get(e,t){return p(this,null,function*(){let d=e,{organizationId:r,id:n,includeDetails:i}=d,a=oe$1(d,["organizationId","id","includeDetails"]),{api_url:u}=R$2();return i&&(a.mode="details"),_._get.call(this,t!=null?t:`${u}${dr}`,{organizationId:r,id:n},{},a)})}static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return _._query.call(this,this.getQueryUrl(`${n}${dr}`),{organizationId:t},{},r,a=>a.items)})}};var X="/payment_source",vt={},js=["type","token","email","chargeable"],U=class c extends _{constructor(e,t,r){let{api_url:n}=R$2();super(t!=null?t:`${n}${X}`,vt,r!=null?r:{},e,js),this.id=e.id,this.type=e.type,this.token=e.token,this.email=e.email,this.type_label=e.type_label,this.name=e.name,this.number=e.number,this.card=e.card,this.mandate=e.mandate,this.chargeable=e.chargeable,this.payment_category=e.payment_category;}static get(){return p(this,arguments,function*(e={},t){let{api_url:r}=R$2(),n=f(t!=null?t:`${r}${X}`,vt,e);return ge(n,"GET",e).then(i=>{if(typeof i!="undefined")return new c(this.formatDetails(i.payment_source))}).catch(()=>new c({}))})}static query(){return p(this,arguments,function*(e={},t){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${r}${X}`,{},vt,e)})}static delete(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(e!=null?e:`${t}${X}`,"DELETE")})}static getAllowed(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${X}/allowed`,"GET")})}static intent(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${X}/intent`,"POST")})}static formatDetails(e){switch(e.type){case "credit-card":e.card=e.data;break;default:e.mandate=e.data;break}return e}};var ee="/organizations/:organizationId/payment-source",Rs={},Oe=class c extends U{constructor(e,t){let{api_url:r}=R$2(),a=e,{organizationId:n}=a,i=oe$1(a,["organizationId"]);super(i,t!=null?t:`${r}${ee}`,{organizationId:n});}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),u=e,{organizationId:n}=u,i=oe$1(u,["organizationId"]),a=f(t!=null?t:`${r}${ee}`,{organizationId:n},Rs);return ge(a,"GET",i).then(d=>{if(typeof d!="undefined")return new c(this.formatDetails(d.payment_source))}).catch(()=>new c({}))})}static delete(){return p(this,null,function*(){let{api_url:e}=R$2();return ge(`${e}${ee}`,"DELETE")})}static getAllowed(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ee}`,{organizationId:e},{});return ge(`${r}/allowed`,"GET")})}static intent(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ee}`,{organizationId:e},{});return ge(`${r}/intent`,"POST")})}static setVerificationMethodAsPaymentMethod(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ee}`,{organizationId:e},{});return ge(`${r}`,"PATCH",{chargeable:true})})}};var lr="/organizations/:organizationId/profile",As={},Os=["default_catalog","marketing","company_name","security_contact","website_url"],ks=["default_catalog","marketing","company_name","security_contact","website_url","vat_number","billing_contact"],ke=class c extends _{constructor(e,t){var n,i,a;let{api_url:r}=R$2();super(t!=null?t:`${r}${lr}`,As,{organizationId:e.organizationId},e,Os,ks),this.stripe=(n=e.stripe)!=null?n:{},this.security_contact=e.security_contact,this.vat_number=e.vat_number,this.billing_contact=e.billing_contact,this.default_catalog=e.default_catalog,this.company_name=e.company_name,this.website_url=e.website_url,this.current_trial=(i=e.current_trial)!=null?i:{},this.resources_limit=(a=e.resources_limit)!=null?a:{},this.account_tier=e.account_tier,this.currency=e.currency,this.invoiced=e.invoiced;}static get(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return Xe$1(c,this,"_get").call(this,`${n}${lr}`,{organizationId:t},{},r)})}};var Pt="/regions",yr={},te=class c extends _{constructor(e){var n,i,a;let{id:t}=e,{api_url:r}=R$2();super(`${r}${Pt}`,yr,{id:t},e),this._queryUrl=_.getQueryUrl(Pt),this.id=e.id,this.available=e.available,this.endpoint=e.endpoint,this.label=e.label,this.private=(n=e.private)!=null?n:true,this.provider=(i=e.provider)!=null?i:{},this.zone=e.zone,this.project_label=e.project_label,this.environmental_impact=(a=e.environmental_impact)!=null?a:{carbon_intensity:0},this.selection_label=e.selection_label,this.timezone=e.timezone,this.datacenter=e.datacenter;}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${Pt}`,{},yr,e,r=>r.regions)})}};var ws="/organizations/:organizationId/regions/:id",we=class c extends te{static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return T.queryCursoredResult(this.getQueryUrl(`${n}${ws}`),{organizationId:t},{},r,c,{queryStringArrayPrefix:"[]"})})}};var xt="/setup/config",zs={},ze=class c extends _{constructor(e,t=`${xt}?service=:service&format=:format`){super(t,zs,{},e,[]),this._queryUrl=_.getQueryUrl(t),this.app=e.app,this.service=e.service;}static get(n,i){return p(this,arguments,function*({service:e="",format:t="commented"},r){let{api_url:a}=R$2(),u=r!=null?r:`${a}${xt}?service=:service&format=:format`,d=f(u,{service:e,format:t});return ge(d,"POST").then(_=>typeof _=="undefined"?void 0:new c(_,xt))})}};var It="/setup/registry",qs={},qe=class c extends _{constructor(e,t=`${It}?service=:name`,r=[]){var n,i,a,u,d;super(t,qs,{},e,[],r),this._queryUrl=_.getQueryUrl(t),this.description=e.description,this.repo_name=e.repo_name,this.disk=(n=e.disk)!=null?n:null,this.docs=(i=e.docs)!=null?i:{},this.endpoint=e.endpoint,this.min_disk_size=(a=e.min_disk_size)!=null?a:null,this.name=e.name,this.runtime=(u=e.runtime)!=null?u:null,this.type=e.type,this.versions=(d=e.versions)!=null?d:{};}static get(e,t){return p(this,null,function*(){let d=e,{name:r}=d,n=oe$1(d,["name"]),{api_url:i}=R$2(),a=t!=null?t:`${i}${It}?service=:name`,u=f(a,e);return ge(u,"POST",n).then(_=>typeof _=="undefined"?void 0:new c(_,It))})}};var _r={},Se="/ssh_keys/:id",Ee=class c extends _{constructor(e){let{id:t}=e,{api_url:r}=R$2();super(`${r}${Se}`,_r,{id:t},e,["title","value"]),this._required=["value"],this._queryUrl=_.getQueryUrl(`${r}${Se}`),this.changed=e.changed,this.id=t,this.title=e.title,this.key_id=e.key_id,this.fingerprint=e.fingerprint,this.value=e.value;}static get(e){return p(this,null,function*(){let i=e,{id:t}=i,r=oe$1(i,["id"]),{api_url:n}=R$2();return Xe$1(c,this,"_get").call(this,`${n}${Se}`,{id:t},_r,r)})}save(){return p(this,null,function*(){let e=yield Xe$1(c.prototype,this,"save").call(this);return new c(e.data)})}getLink(e,t=false){if(e==="#delete"){let{api_url:r}=R$2();return f(`${r}${Se}`,{id:this.key_id})}return super.getLink(e,t)}checkProperty(e,t){let r={};return e==="value"&&!this.validatePublicKey(t)&&(r[e]="The SSH key is invalid"),r}validatePublicKey(e){if(!e.replace(/\s+/u," ").includes(" "))return  false;let r=e.split(" ",3),n;try{n=Es(r[1]);}catch(i){return  false}return !!n}};var $t={},jt="/teams/:teamId/members",hr=["role"],oe=class c extends _{constructor(e,t){let{teamId:r}=e,{api_url:n}=R$2();super(t!=null?t:`${n}${jt}`,$t,{teamId:r},e,hr,hr),this.user=e.user,this.role=e.role;}static get(e,t){return p(this,null,function*(){let u=e,{teamId:r,id:n}=u,i=oe$1(u,["teamId","id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${jt}/:id`,{teamId:r,id:n},$t,i)})}static query(e,t){return p(this,null,function*(){let a=e,{teamId:r}=a,n=oe$1(a,["teamId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${jt}`,{teamId:r},$t,n)})}};var Rt={},Fe="/teams",Fs=["name","parent","id"],Ms=["name"],Me=class c extends _{constructor(e,t){let{api_url:r}=R$2();super(t!=null?t:`${r}${Fe}`,Rt,{},e,Fs,Ms),this.id=e.id,this.name=e.name,this.parent=e.parent,this.organization=e.organization;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${Fe}/:id`,{id:r},Rt,n)})}static query(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${r}${Fe}`,{},Rt,e)})}getMembers(){return p(this,null,function*(){return oe.query({teamId:this.id})})}addMember(e){return p(this,null,function*(){return new oe(I$2(g$1({},e),{teamId:this.id})).save()})}getLink(e,t=true){if(this.hasLink(e))return super.getLink(e,t);if(e==="self"){let{api_url:r}=R$2();return `${r}${Fe}/:id`}return ""}};var De="/tickets",At={},Le=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${De}`,At,{},e,[],[]),this.ticket_id=e.ticket_id,this.created=e.created,this.updated=e.updated,this.type=e.type,this.subject=e.subject,this.description=e.description,this.priority=e.priority,this.followup_tid=e.followup_tid,this.status=e.status,this.recipient=e.recipient,this.requester_id=e.requester_id,this.submitter_id=e.submitter_id,this.assignee_id=e.assignee_id,this.organization_id=e.organization_id,this.collaborator_ids=e.collaborator_ids,this.has_incidents=e.has_incidents,this.due=e.due,this.tags=e.tags,this.subscription_id=e.subscription_id,this.ticket_group=e.ticket_group,this.support_plan=e.support_plan,this.affected_url=e.affected_url,this.queue=e.queue,this.issue_type=e.issue_type,this.resolution_time=e.resolution_time,this.response_time=e.response_time,this.project_url=e.project_url,this.region=e.region,this.category=e.category,this.environment=e.environment,this.ticket_sharing_status=e.ticket_sharing_status,this.application_ticket_url=e.application_ticket_url,this.infrastructure_ticket_url=e.infrastructure_ticket_url,this.cloud=e.cloud,this.branch=e.branch,this.jira=e.jira,this.attachment=e.attachment,this.attachment_filename=e.attachment_filename,this.attachments=e.attachments;}static getAttachments(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}/comments/${e}/description`,{},At,{})})}static getAllAttachments(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}/comments/${e}/attachments`,"GET")})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}${De}`,{},At,e)})}static open(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${De}`,"POST",e)})}static patch(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return ge(`${r}${De}/${e}`,"PATCH",t)})}};var br="/tickets/category",fr={},Qe=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${br}`,fr,{},e,[],[]),this.id=e.id,this.label=e.label;}static get(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${br}`,{},fr,e)})}};var vr="/tickets/priority",Pr={},Ge=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${vr}`,Pr,{},e,[],[]),this.id=e.id,this.label=e.label,this.short_description=e.short_description,this.description=e.description;}static get(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${vr}`,{},Pr,e)})}};var xr={},Ds="/projects/:projectId/environments/:environmentId/deployments/current/topology",Ve=class c extends _{constructor(e,t){var r,n;super(t,xr,{},e),this.id=e.id,this.name=e.name,this.constraints=(r=e.constraints)!=null?r:{},this.services=(n=e.services)!=null?n:{};}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${Ds}`,{projectId:r,environmentId:n},xr,i)})}};var ae="/users/:userId/totp",Ir={},We=class c extends _{constructor(e){let{id:t}=e,{api_url:r}=R$2();super(`${r}${ae}`,Ir,{id:t},e),this._queryUrl=_.getQueryUrl(ae),this.issuer=e.issuer,this.account_name=e.account_name,this.secret=e.secret,this.qr_code=e.qr_code;}static get(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}${ae}`,{userId:e},Ir,{})})}static enroll(e,t,r){return p(this,null,function*(){let{api_url:n}=R$2(),i=f(`${n}${ae}`,{userId:e});return ge(i,"POST",{secret:t,passcode:r})})}static reset(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}/users/:userId/codes`,{userId:e});return ge(r,"POST")})}static delete(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ae}`,{userId:e});return ge(r,"DELETE")})}};var Ot="/vouchers",kt={},Ne=class c extends _{constructor(e){var n,i;let{uuid:t}=e,{api_url:r}=R$2();super(`${r}${Ot}`,kt,{uuid:t},e),this.currency=e.currency,this.discounted_orders=(n=e.discounted_orders)!=null?n:[],this.uuid=e.uuid,this.vouchers=(i=e.vouchers)!=null?i:[],this.vouchers_applied=e.vouchers_applied,this.vouchers_remaining_balance=e.vouchers_remaining_balance,this.vouchers_total=e.vouchers_total;}static get(e,t){return p(this,null,function*(){let a=e,{uuid:r}=a,n=oe$1(a,["uuid"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${Ot}`,{uuid:r},kt,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${Ot}`,{},kt,e,r=>r.vouchers)})}};var g={Account:O,Address:me,Project:H,SshKey:Ee,Subscription:K,Activity:L$1,Environment:M,Certificate:F,Comment:le,Domain:k,EnvironmentAccess:j,EnvironmentBackup:be,EnvironmentDomain:D,Metrics:N,ProjectAccess:P,ProjectLevelVariable:S,Route:R,Variable:z,Deployment:he,Organization:E,Team:Me,Region:te,Order:Y,Me:$e,AccountsProfile:ue,SetupRegistry:qe,SetupConfig:ze,AuthUser:$,Integration:q,TwoFactorAuthentication:We,ConnectedAccount:ye,PaymentSource:U,Ticket:Le,TicketPriority:Ge,TicketCategory:Qe,Voucher:Ne,Invitation:ve,OrganizationSubscription:J,EnvironmentType:fe,OrganizationMember:L,OrganizationOrder:Ae,OrganizationPaymentSource:Oe,OrganizationProfile:ke,OrganizationAddress:je,OrganizationVoucher:Q,OrganizationDiscount:B,OrganizationInvitation:Re,OrganizationRegion:we,Topology:Ve};var I=ge,wt=class{constructor(e){Ze$1(e),this.authenticationPromise=B$1(e);}getAccessToken(){return p(this,null,function*(){return this.authenticationPromise})}getConfig(){return R$2()}wipeToken(){vt$1();}reAuthenticate(){return p(this,null,function*(){return this.authenticationPromise=B$1(R$2(),true),this.authenticationPromise})}getAccountInfo(e=false){return p(this,null,function*(){return (!this.getAccountInfoPromise||e)&&(this.getAccountInfoPromise=g.Me.get(e)),this.getAccountInfoPromise})}locateProject(e){return p(this,null,function*(){return this.getProjects().then(t=>p(this,null,function*(){if(!t)return;let r=t.find(i=>i.id===e);if(r!=null&&r.endpoint)return r.endpoint;let{api_url:n}=R$2();return I(`${n}/projects/${e}`,"GET").then(i=>i.endpoint||false)}))})}getProjects(){return p(this,null,function*(){return this.getAccountInfo().then(e=>e?e.projects.map(t=>new g.Project(t,t.endpoint)):false)})}getProject(e){return p(this,null,function*(){return g.Project.get({id:e})})}getEnvironments(e){return p(this,null,function*(){return g.Environment.query({projectId:e})})}getEnvironment(e,t){return p(this,null,function*(){return g.Environment.get({projectId:e,id:t})})}getEnvironmentActivities(e,t,r,n){return p(this,null,function*(){let i=n==null?void 0:n.toISOString();return g.Activity.query({projectId:e,environmentId:t,type:r,starts_at:i})})}getEnvironmentActivity(e,t,r){return p(this,null,function*(){return g.Activity.get({projectId:e,environmentId:t,id:r})})}getCertificates(e){return p(this,null,function*(){return g.Certificate.query({projectId:e})})}addCertificate(i,a,u){return p(this,arguments,function*(e,t,r,n=[]){let{api_url:d}=R$2(),_=`${d}/projects/${e}/certificates`;return new g.Certificate({certificate:t,key:r,chain:n},_).save()})}getDomains(e,t){return p(this,null,function*(){return g.Domain.query({projectId:e,limit:t})})}getEnvironmentUsers(e,t){return p(this,null,function*(){return g.EnvironmentAccess.query({projectId:e,environmentId:t})})}getRoutes(e,t){return p(this,null,function*(){return g.Route.query({projectId:e,environmentId:t})})}getProjectUsers(e){return p(this,null,function*(){return g.ProjectAccess.query({projectId:e})})}getProjectVariables(e,t){return p(this,null,function*(){return g.ProjectLevelVariable.query({projectId:e,limit:t})})}getEnvironmentVariables(e,t,r){return p(this,null,function*(){return g.Variable.query({projectId:e,environmentId:t,limit:r})})}getEnvironmentMetrics(e,t,r){return p(this,null,function*(){return g.Metrics.get({projectId:e,environmentId:t,q:r})})}getEnvironmentBackups(e,t){return p(this,null,function*(){return g.EnvironmentBackup.query({projectId:e,environmentId:t})})}getEnvironmentDomains(e,t){return p(this,null,function*(){return g.EnvironmentDomain.query({projectId:e,environmentId:t})})}getIntegrations(e){return p(this,null,function*(){return g.Integration.query({projectId:e})})}getIntegration(e,t){return p(this,null,function*(){return g.Integration.get({projectId:e,id:t})})}getIntegrationActivities(e,t,r,n){return p(this,null,function*(){let{api_url:i}=R$2(),a=n==null?void 0:n.toISOString(),u=`${i}/projects/${e}/integrations/${t}/activities`;return g.Activity.query({type:r,starts_at:a},u)})}getSshKeys(){return p(this,null,function*(){return this.getAccountInfo().then(e=>g.SshKey.wrap(e.ssh_keys))})}getSshKey(e){return p(this,null,function*(){return g.SshKey.get({id:e})})}addSshKey(e,t){return p(this,null,function*(){let r=this.cleanRequest({value:e,title:t});return new g.SshKey(r).save()})}cleanRequest(e){let t={},r=Object.keys(e).filter(n=>e[n]!==null&&typeof e[n]!="undefined");for(let n of r)t[n]=e[n];return t}createSubscription(e){return p(this,null,function*(){let{region:t,plan:r="development",title:n,defaultBranch:i,storage:a,environments:u,optionsUrl:d,vendor:_,optionsCustom:b}=e,C=this.cleanRequest({project_region:t,plan:r,project_title:n,default_branch:i,storage:a,environments:u,options_url:d,vendor:_,options_custom:b});return new g.Subscription(C).save()})}createOrganizationSubscription(e){return p(this,null,function*(){let{organizationId:t,region:r,plan:n="development",title:i,defaultBranch:a,storage:u,environments:d,optionsUrl:_,vendor:b,optionsCustom:C}=e,re=this.cleanRequest({project_region:r,plan:n,project_title:i,default_branch:a,storage:u,environments:d,options_url:_,vendor:b,options_custom:C,organizationId:t});return new g.OrganizationSubscription(re).save()})}getSubscription(e){return p(this,null,function*(){return g.Subscription.get({id:e})})}getSubscriptions(e,t){return p(this,null,function*(){return g.Subscription.query({filter:e,all:t&&1})})}getOrganizationSubscriptions(e,t){return p(this,null,function*(){return g.OrganizationSubscription.query(I$2(g$1({},t),{organizationId:e}))})}getOrganizationSubscription(e,t){return p(this,null,function*(){return g.OrganizationSubscription.get({organizationId:e,id:t})})}getOrganizationSubscriptionCanCreate(e){return p(this,null,function*(){return g.OrganizationSubscription.getCanCreate({organizationId:e})})}getOrganizationMembers(e,t,r){return p(this,null,function*(){return g.OrganizationMember.query({organizationId:e,filter:t,sort:r})})}getOrganizationMember(e,t){return p(this,null,function*(){return g.OrganizationMember.get({organizationId:e,id:t})})}initializeEnvironment(e,t,r="master"){return p(this,null,function*(){let{api_url:n}=R$2();return I(`${n}/projects/${e}/environments/${r}/initialize`,"POST",t)})}getSubscriptionEstimate(e){return p(this,null,function*(){let{api_url:t}=R$2();return I(`${t}/subscriptions/estimate`,"GET",e)})}getOrganizationSubscriptionEstimate(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return I(`${r}/organizations/${e}/subscriptions/estimate`,"GET",t)})}getCurrentDeployment(e,t,r){return p(this,null,function*(){return g.Deployment.get(g$1({projectId:e,environmentId:t},r))})}getNextDeployment(e,t,r){return p(this,null,function*(){return g.Deployment.getNext(g$1({projectId:e,environmentId:t},r))})}getDeployments(e,t){return p(this,null,function*(){return g.Deployment.getDeployments({projectId:e,environmentId:t})})}runRuntimeOperationDeployment(e){return p(this,null,function*(){return g.Deployment.run(e)})}getOrganizations(e){return p(this,null,function*(){return g.Organization.query(e)})}getOrganization(e){return p(this,null,function*(){return g.Organization.get({id:e})})}createOrganization(e){return p(this,null,function*(){return new g.Organization(e).save()})}createTeam(e){return p(this,null,function*(){return new g.Team(e).save()})}getTeams(){return p(this,null,function*(){return this.getAccountInfo().then(e=>{if(e)return e.teams.map(t=>new g.Team(t))})})}getTeam(e){return p(this,null,function*(){return g.Team.get({id:e})})}getRegions(){return p(this,null,function*(){return g.Region.query({})})}getOrganizationRegions(e,t){return p(this,null,function*(){return g.OrganizationRegion.query(g$1({organizationId:e},t))})}getAccount(e){return p(this,null,function*(){return g.Account.get({id:e})})}getAddress(e){return p(this,null,function*(){return g.Address.get({id:e})})}getOrganizationAddress(e){return p(this,null,function*(){return g.OrganizationAddress.query({organizationId:e})})}getOrders(e){return p(this,null,function*(){return g.Order.query({filter:{owner:e}})})}getOrder(e){return p(this,null,function*(){return g.Order.get({id:e})})}getOrganizationOrders(e,t){return p(this,null,function*(){return g.OrganizationOrder.query({organizationId:e,filter:t})})}getOrganizationOrder(e,t,r,n){return p(this,null,function*(){return g.OrganizationOrder.get({organizationId:e,id:t,includeDetails:r,asof:n})})}getVouchers(e){return p(this,null,function*(){return g.Voucher.get({uuid:e})})}getOrganizationVouchers(e){return p(this,null,function*(){return g.OrganizationVoucher.get({organizationId:e})})}addOrganizationVoucher(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=this.cleanRequest({code:t});return new g.OrganizationVoucher(g$1({organizationId:e},n),`${r}/organizations/${e}/vouchers/apply`).save()})}getOrganizationDiscounts(e){return p(this,null,function*(){return g.OrganizationDiscount.get({organizationId:e})})}getCardOnFile(){return p(this,null,function*(){let{api_url:e}=R$2();return I(`${e}/cardonfile`,"GET")})}getPaymentSource(e){return p(this,null,function*(){return g.PaymentSource.get({owner:e})})}getOrganizationPaymentSource(e,t){return p(this,null,function*(){return g.OrganizationPaymentSource.get({organizationId:e,include_nonchargeable:t!=null?t:0})})}addPaymentSource(e,t,r){return p(this,null,function*(){let n=this.cleanRequest({type:e,token:t,email:r});return new g.PaymentSource(n).save()})}addOrganizationPaymentSource(e,t,r,n,i){return p(this,null,function*(){let a=this.cleanRequest({type:t,token:r,email:n,chargeable:i!=null?i:true});return new g.OrganizationPaymentSource(g$1({organizationId:e},a)).save()})}deletePaymentSource(e){return p(this,null,function*(){return g.PaymentSource.delete(e)})}deleteOrganizationPaymentSource(){return p(this,null,function*(){return g.OrganizationPaymentSource.delete()})}getPaymentSourcesAllowed(){return p(this,null,function*(){return g.PaymentSource.getAllowed()})}getOrganizationPaymentSourcesAllowed(e){return p(this,null,function*(){return g.OrganizationPaymentSource.getAllowed(e)})}createPaymentSourceIntent(){return p(this,null,function*(){return g.PaymentSource.intent()})}createOrganizationPaymentSourceIntent(e){return p(this,null,function*(){return g.OrganizationPaymentSource.intent(e)})}getUserProfile(e){return p(this,null,function*(){return g.AccountsProfile.get({id:e})})}getOrganizationProfile(e){return p(this,null,function*(){return g.OrganizationProfile.get({organizationId:e})})}getStreamingLog(e,t=0){return p(this,null,function*(){let r=yield this.getAccessToken(),n=`${e.getLink("log")}?max_items=${t}&max_delay=1000`;return fetch(n,{method:"GET",headers:{Authorization:`Bearer ${r.access_token}`}})})}updateUserProfile(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=yield I(`${r}/profiles/${e}`,"PATCH",t);return new g.AccountsProfile(n)})}updateOrganizationProfile(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=yield I(`${r}/organizations/${e}/profile`,"PATCH",t);return new g.OrganizationProfile(n)})}getSetupRegistry(){return p(this,null,function*(){let{api_url:e}=R$2();return I(`${e}/setup/registry`,"POST").then(t=>typeof t=="undefined"?void 0:Object.entries(t).reduce((r,[n,i])=>(r[n]=new g.SetupRegistry(i),r),{}))})}getSetupRegistryItem(e){return p(this,null,function*(){return g.SetupRegistry.get({name:e})})}getSetupConfig(e){return p(this,null,function*(){return g.SetupConfig.get(e)})}getUser(e){return p(this,null,function*(){return g.AuthUser.get({id:e})})}getUserIdFromUsername(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield I(`${t}/profiles?filter[username]=${e}`);return new g.AccountsProfile(r.profiles[0])})}getProjectActivities(e,t,r){return p(this,null,function*(){let n={type:t,starts_at:r,projectId:e},{api_url:i}=R$2();return g.Activity.query(n,`${i}/projects/:projectId/activities`)})}getProjectActivity(e,t){return p(this,null,function*(){let r={id:t,projectId:e},{api_url:n}=R$2();return g.Activity.get(r,`${n}/projects/:projectId/activities`)})}getTFA(e){return p(this,null,function*(){return g.TwoFactorAuthentication.get(e)})}enrollTFA(e,t,r){return p(this,null,function*(){return g.TwoFactorAuthentication.enroll(e,t,r)})}disableTFA(e){return p(this,null,function*(){return g.TwoFactorAuthentication.delete(e)})}resetRecoveryCodes(e){return p(this,null,function*(){return g.TwoFactorAuthentication.reset(e)})}getConnectedAccounts(e){return p(this,null,function*(){return g.ConnectedAccount.query(e)})}getTickets(e){return p(this,null,function*(){return g.Ticket.query(e)})}updateTicketStatus(e,t){return p(this,null,function*(){return g.Ticket.patch(e,{status:t}).then(r=>r)})}getTicketPriorities(e,t){return p(this,null,function*(){return (yield g.TicketPriority.get({subscription_id:e,category:t})).map(n=>new g.TicketPriority(n))})}getTicketCategories(){return p(this,null,function*(){return (yield g.TicketCategory.get()).map(t=>new g.TicketCategory(t))})}getTicketAttachments(e){return p(this,null,function*(){let t=yield g.Ticket.getAttachments(e),{attachments:r}=t;return Object.entries(r||{}).map(([n,i])=>({filename:n,url:i.uri,contentType:i.content_type}))})}getAllTicketAttachments(e){return p(this,null,function*(){return (yield g.Ticket.getAllAttachments(e)).map(r=>({filename:r.filename,url:r.uri,contentType:r.content_type}))})}openTicket(e){return p(this,null,function*(){return yield g.Ticket.open(e)})}loadComments(e,t){return p(this,null,function*(){var _;let r=yield g.Comment.query(e,t),n=t.page||1,i=50,a=Math.ceil(r.count/i),u=n===a-1,d=n===a;return u&&r.count%i===1&&((_=r._links)==null||delete _.next),r.count-=1,d&&(r.comments=r.comments.slice(0,-1)),I$2(g$1({},r),{comments:r.comments.map(b=>I$2(g$1({},b),{attachments:Object.values(b.attachments||{}).map(C=>({filename:C.file_name,url:C.uri,contentType:C.content_type}))}))})})}sendComment(e){return p(this,null,function*(){return new g.Comment(e).save()})}updateProfilePicture(e,t){return p(this,null,function*(){return g.AccountsProfile.updateProfilePicture(e,t)})}deleteProfilePicture(e){return p(this,null,function*(){return g.AccountsProfile.deleteProfilePicture(e)})}createInvitation(e,t,r,n,i=false){return p(this,null,function*(){return new g.Invitation({email:e,projectId:t,environments:n,role:r,force:i}).save()})}createOrganizationInvitation(e,t,r,n=false){return p(this,null,function*(){return new g.OrganizationInvitation({email:e,organizationId:t,permissions:r,force:n}).save()})}getOrganizationInvitations(e,t){return p(this,null,function*(){return g.OrganizationInvitation.getList(e,t)})}createInvitationWithEnvironmentTypes(e,t,r,n,i=false){return p(this,null,function*(){return new g.Invitation({email:e,projectId:t,permissions:n,role:r,force:i}).save()})}getInvitations(e){return p(this,null,function*(){return g.Invitation.query(e)})}getProjectEnvironmentTypes(e){return p(this,null,function*(){return g.EnvironmentType.query({projectId:e})})}getProjectEnvironmentType(e,t){return p(this,null,function*(){return g.EnvironmentType.get({projectId:e,id:t})})}getProjectEnvironmentTypesWithAccesses(e){return p(this,null,function*(){let t=yield this.getProjectEnvironmentTypes(e);for(let r of t)yield r.getAccesses();return t})}updateEnvironmentTypeAccess(e){return p(this,null,function*(){return g.EnvironmentType.updateAccess(e)})}deleteEnvironmentTypeAccess(e){return p(this,null,function*(){return g.EnvironmentType.deleteAccess(e)})}createEnvironmentTypeAccess(e){return p(this,null,function*(){return g.EnvironmentType.createAccess(e)})}getTopology(e,t,r){return p(this,null,function*(){return g.Topology.get(g$1({projectId:e,environmentId:t},r))})}getDunningActions(e){return p(this,null,function*(){let{api_url:t}=R$2();return I(`${t}/organizations/${e}/dunning-actions`)})}setVerificationMethodAsPaymentMethod(e){return p(this,null,function*(){return g.OrganizationPaymentSource.setVerificationMethodAsPaymentMethod(e)})}};
+var ce="/users/:id",He={},O=class c extends _{constructor(e){var n;let{id:t}=e,{api_url:r}=R$2();super(`${r}${ce}`,He,{id:t},e),this._queryUrl=_.getQueryUrl(ce),this.id=e.id,this.created_at=e.created_at,this.updated_at=e.updated_at,this.has_key=e.has_key,this.display_name=e.display_name,this.email=e.email,this.picture=e.picture,this.roles=(n=e.roles)!=null?n:[];}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${ce}`,{id:r},He,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${ce}`),{},He,e)})}};var pe="/profiles/:id",Lt={},Cr=["id","display_name","email","username","picture","company_type","company_role","company_name","website_url","new_ui","ui_colorscheme","ui_contrast","default_catalog","marketing"],$r=["display_name","username","picture","company_type","company_role","company_name","website_url","new_ui","ui_colorscheme","ui_contrast","default_catalog","marketing"],ue=class c extends _{constructor(e){var r;let{api_url:t}=R$2();super(`${t}${pe}`,Lt,{},e,Cr,$r),this._queryUrl=_.getQueryUrl(pe),this.id=e.id,this.display_name=e.display_name,this.email=e.email,this.username=e.username,this.picture=e.picture,this.company_type=e.company_type,this.company_role=e.company_role,this.company_name=e.company_name,this.website_url=e.website_url,this.new_ui=(r=e.new_ui)!=null?r:true,this.ui_colorscheme=e.ui_colorscheme,this.ui_contrast=e.ui_contrast,this.default_catalog=e.default_catalog,this.marketing=e.marketing,this.billing_contact=e.billing_contact,this.vat_number=e.vat_number;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${pe}`,{id:r},Lt,n)})}static update(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${f(pe,{id:e})}`,i=yield ge(n,"PATCH",t);return new c(i)})}static getUserByUsername(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield ge(`${t}/profiles?filter[username]=${e}`);return new c(r.profiles[0])})}static updateProfilePicture(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return ge(`${r}/profile/${e}/picture`,"POST",t)})}static deleteProfilePicture(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}/profile/${e}/picture`,"DELETE")})}};var se="/profiles/:id/address",Ke={},jr=["country","name_line","premise","sub_premise","thoroughfare","administrative_area","sub_administrative_area","locality","dependent_locality","postal_code"],me=class c extends _{constructor(e){let{id:t}=e,{api_url:r}=R$2();super(`${r}${se}`,Ke,{id:t},e,[],jr),this._queryUrl=c.getQueryUrl(`${r}${se}`,t),this.id=e.id,this.country=e.country,this.name_line=e.name_line,this.premise=e.premise,this.sub_premise=e.sub_premise,this.thoroughfare=e.thoroughfare,this.administrative_area=e.administrative_area,this.sub_administrative_area=e.sub_administrative_area,this.locality=e.locality,this.dependent_locality=e.dependent_locality,this.postal_code=e.postal_code;}static getQueryUrl(e,t){return t?f(e,{id:t}):""}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,this.getQueryUrl(t!=null?t:`${i}${se}`,r),{id:r},Ke,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2(),{id:r}=e;return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${se}`,r),{},Ke,e)})}update(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${se}`;return t&&(n=c.getQueryUrl(n,t)),Xe$1(c.prototype,this,"update").call(this,e,n)})}};var ne="/users/:id",Gt={},Ar=["username","first_name","last_name","email","picture","website","country","company"],Or=["first_name","last_name","username","picture","company","website"],$=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${ne}`,Gt,{},e,Ar,Or),this._queryUrl=_.getQueryUrl(ne),this.id=e.id,this.username=e.username,this.first_name=e.first_name,this.last_name=e.last_name,this.email=e.email,this.email_verified=e.email_verified,this.phone_number_verified=e.phone_number_verified,this.picture=e.picture,this.website=e.website,this.country=e.country,this.company=e.company,this.mfa_enabled=e.mfa_enabled,this.sso_enabled=e.sso_enabled,this.deactivated=e.deactivated,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${ne}`,{id:r},Gt,n)})}static update(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${f(ne,{id:e})}`,i=yield ge(n,"PATCH",t);return new c(i)})}static updateEmailAddress(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=`${r}${f(ne,{id:e})}/emailaddress`;return ge(n,"POST",{email_address:t})})}static getUserByUsername(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield ge(`${t}/users/username=${e}`);return new c(r)})}};var Vt={},kr="/projects/:projectId/certificates",F=class c extends _{constructor(e,t){var r,n,i,a;super(t,Vt,{},e,["key","certificate","chain"]),this.key=e.key,this.id=e.id,this.certificate=e.certificate,this.chain=(r=e.chain)!=null?r:[],this.domains=(n=e.domains)!=null?n:[],this.expires_at=e.expires_at,this.updated_at=e.updated_at,this.created_at=e.created_at,this.is_provisioned=(i=e.is_provisioned)!=null?i:true,this.issuer=(a=e.issuer)!=null?a:[],this._required=["key","certificate"];}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${kr}`,{projectId:r},Vt,n)})}};var Je="/comments",Wt={},wr=["body","ticket_id","attachments","author_id"],le=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${Je}`,Wt,{},e,wr,[]),this.ticket_id=e.ticket_id,this.id=this.ticket_id,this.comment_id=e.comment_id,this.created_at=e.created_at,this.body=e.body,this.author_id=e.author_id,this.public=e.public,this.attachments=e.attachments;}static query(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${Je}/${e}`,{},Wt,t)})}static send(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${Je}`,"POST",e)})}};var Nt="/users/:userId/connections",ye=class c extends _{constructor(e,t){super(t,{},{},e,[],[]),this.provider=e.provider,this.provider_type=e.provider_type||e.provider,this.subject=e.subject,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${Nt}/:provider`,{userId:e,provider:t})})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${Nt}`,{userId:e},{},{},r=>Array.isArray(r)?r.map(n=>I$2(g$1({},n),{id:n.provider})):[])})}delete(){return p(this,null,function*(){return ge(this._url,"DELETE")})}};var _e={},zr=["services","webapps","workers"],he=class c extends _{constructor(e,t){var r,n,i,a,u,d,_,b;super(t,_e,{},e,[],zr),this.webapps=(r=e.webapps)!=null?r:{},this.services=(n=e.services)!=null?n:{},this.workers=(i=e.workers)!=null?i:{},this.routes=(a=e.routes)!=null?a:{},this.container_profiles=(u=e.container_profiles)!=null?u:{},this.variables=(d=e.variables)!=null?d:[],this.project_info=(_=e.project_info)!=null?_:{},this.environment_info=(b=e.environment_info)!=null?b:{},this.fingerprint=e.fingerprint,this.id=e.id;}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}/projects/:projectId/environments/:environmentId/deployments/current`,{projectId:r,environmentId:n},_e,i)})}static getNext(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}/projects/:projectId/environments/:environmentId/deployments/next`,{projectId:r,environmentId:n},_e,i)})}static getDeployments(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}/projects/:projectId/environments/:environmentId/deployments`,{projectId:r,environmentId:n},_e,i)})}static run(e){return p(this,null,function*(){let{api_url:t}=R$2(),{projectId:r,deploymentId:n,environmentId:i,service:a,operation:u}=e,d={operation:u,service:a},_=`${t}/projects/${r}/environments/${i}/deployments/${n}/operations`;return ge(_,"POST",d).then(b=>p(this,null,function*(){let re=yield new y(b,_).getActivities();if(re.length!==1)throw new Error(`Expected one activity, found ${re.length}`);return re[0]}))})}};var Ye={},qr=["is_default"],Bt="/projects/:projectId/domains",k=class c extends _{constructor(e,t){super(t,Ye,{},e,["name","ssl","is_default"],qr),this.id=e.id,this.name=e.name,this.is_default=e.is_default,this.created_at=e.created_at,this.ssl=e.ssl,this.updated_at=e.updated_at,this._required=["name"];}static get(e,t){return p(this,null,function*(){let u=e,{name:r,projectId:n}=u,i=oe$1(u,["name","projectId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t?`${t}/:name`:`${a}${Bt}`,{name:r,projectId:n},Ye,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${Bt}`,{projectId:r},Ye,n)})}};var Ze="/users",Xe={},w=class c extends _{constructor(e,t=`${Ze}/:id`,r=[]){let{id:n}=e;super(t,Xe,{id:n},e,[],r),this._queryUrl=_.getQueryUrl(t),this.id=n,this.created_at=e.created_at,this.updated_at=e.updated_at,this.has_key=e.has_key,this.display_name=e.display_name,this.email=e.email,this.username=e.username;}static get(e,t,r){return p(this,null,function*(){let u=e,{id:n}=u,i=oe$1(u,["id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${Ze}/:id`,{id:n},Xe,i,r)})}static query(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(t!=null?t:`${r}${Ze}`),{},Xe,e)})}};var Ue={},Tr="admin",Sr="viewer",Er="contributor",Fr=[Tr,Sr,Er],Mr=["user","role","email"],Dr=["role"],Ht="/projects/:projectId/environments/:environmentId/access",j=class c extends _{constructor(e,t){super(t,Ue,{},e,Mr,Dr),this.id=e.id,this.user=e.user,this.email=e.email,this.role=e.role,this.project=e.project,this.environment=e.environment,this._required=["role"];}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t?`${t}/:id`:`${u}${Ht}/:id`;return Xe$1(c,this,"_get").call(this,d,{id:i,projectId:r,environmentId:n},Ue,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${Ht}`,{projectId:r,environmentId:n},Ue,i)})}update(e){return p(this,null,function*(){return Xe$1(c.prototype,this,"update").call(this,e)})}checkProperty(e,t){let r={};return e==="role"&&!Fr.includes(t)&&(r[e]=`Invalid environment role: '${t}'`),r}getLink(e,t=true){return e==="#edit"&&!this.hasLink(e)?this.getUri(t):super.getLink(e,t)}getAccount(){return p(this,null,function*(){return O.get({id:this.id}).then(e=>{if(!e)throw new Error(`Account not found for user: ${this.id}`);return e})})}getUser(){let e=this.getEmbedded("users");if(e)return new w(e[0])}};var Kt="/projects/:projectId/git/blobs/:sha",G=class c extends _{constructor(t,r=Kt,n){var i,a,u,d,_,b;super(r,{},n,t,[],[]);this.type="blob";this.id=(i=t.id)!=null?i:"",this.path=(a=t.path)!=null?a:"",this.sha=(u=t.sha)!=null?u:"",this.size=(d=t.size)!=null?d:"",this.encoding=(_=t.encoding)!=null?_:"",this.content=(b=t.content)!=null?b:"";}static get(t,r){return p(this,null,function*(){let{api_url:n}=R$2();return Xe$1(c,this,"_get").call(this,`${n}${Kt}`,{projectId:t,sha:r})})}getInstance(){return p(this,null,function*(){let t=yield c.get(this._params.projectId,this._params.sha);if(t)return t.path=this.path,t})}decodeBase64(){let t;return Lr?t=Buffer.from(this.content,"base64").toString():t=atob(this.content),t}getRawContent(){return p(this,null,function*(){if(!this.encoding){let t=yield c.get(this._params.projectId,this._params.sha);return t==null?void 0:t.getRawContent()}if(this.encoding==="base64")return this.decodeBase64();throw new Error(`Unrecognised blob encoding: ${this.encoding}`)})}};var Jt="/projects/:projectId/git/trees/:sha",V=class c extends _{constructor(t,r=Jt,n){var i,a,u,d;super(r,{},n,t,[],[]);this.type="tree";this.id=this.id=(i=t.id)!=null?i:"",this.sha=this.sha=(a=t.sha)!=null?a:"",this.path=this.path=(u=t.path)!=null?u:"",this.tree=this.tree=(d=t.tree)!=null?d:[];}static get(t,r){return p(this,null,function*(){let{api_url:n}=R$2(),i=yield Xe$1(c,this,"_get").call(this,`${n}${Jt}`,{projectId:t,sha:r});if(i)return i.tree=c.bind(i==null?void 0:i.tree,t),i})}static bind(t,r){return t.map(n=>{switch(n==null?void 0:n.type){case "tree":return new c(n,void 0,{projectId:r,sha:n.sha});case "blob":return new G(n,void 0,{projectId:r,sha:n.sha});default:return}})}getInstance(){return p(this,null,function*(){let t=yield c.get(this._params.projectId,this.sha);if(t)return t.path=this.path,t.tree=c.bind(t.tree,this._params.projectId),t})}};var Qr="/projects/:projectId/git/commits/:sha",W=class c extends _{constructor(e,t,r){var n,i,a,u,d,_,b;super(t,{},r,e,[],[]),this.id=(n=e.id)!=null?n:"",this.sha=(i=e.sha)!=null?i:"",this.author=(a=e.author)!=null?a:"",this.committer=(u=e.committer)!=null?u:"",this.message=(d=e.message)!=null?d:"",this.tree=(_=e.tree)!=null?_:"",this.parents=(b=e.parents)!=null?b:[];}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${Qr}`,{projectId:e,sha:t})})}getTree(){return p(this,arguments,function*(e=this._params.projectId){return V.get(e,this.tree)})}};var Yt={},Gr="/projects/:projectId/environments/:environmentId/metrics",N=class c extends _{constructor(e,t){var r;super(t,Yt,{},e),this.results=(r=e.results)!=null?r:{};}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${Gr}`,{projectId:r,environmentId:n},Yt,i)})}};var et={},Zt=["route","to","type","upstream","cache"],Xt="/projects/:projectId/environments/:environmentId/routes",R=class c extends _{constructor(e,t){var r,n,i;super(t,et,{},e,Zt,Zt),this.id=e.id,this.project=e.project,this.environment=e.environment,this.route=(r=e.route)!=null?r:{},this.cache=(n=e.cache)!=null?n:{},this.ssi=(i=e.ssi)!=null?i:[],this.upstream=e.upstream,this.to=e.to,this.type=e.type;}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t?`${t}/:id`:`${u}${Xt}/:id`;return Xe$1(c,this,"_get").call(this,d,{id:i,projectId:r,environmentId:n},et,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${Xt}`,{projectId:r,environmentId:n},et,i)})}};var tt={},Vr=["name","value","is_json","is_sensitive","is_inheritable","is_enabled","visible_build","visible_runtime"],Wr=["value","is_json","is_sensitive","is_inheritable","is_enabled","visible_build","visible_runtime"],Ut="/projects/:projectId/environments/:environmentId/variables",z=class c extends _{constructor(e,t){var r,n;super(t!=null?t:"",tt,{},e,Vr,Wr),this.id=e.id,this.name=e.name,this.project=e.project,this.environment=e.environment,this.value=e.value,this.is_enabled=e.is_enabled,this.created_at=e.created_at,this.updated_at=e.updated_at,this.inherited=e.inherited,this.is_json=e.is_json,this.is_sensitive=e.is_sensitive,this.is_inheritable=(r=e.is_inheritable)!=null?r:true,this.visible_build=e.visible_build,this.visible_runtime=(n=e.visible_runtime)!=null?n:true;}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t!=null?t:`${u}${Ut}`;return Xe$1(c,this,"_get").call(this,`${d}/:id`,{id:i},tt,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${Ut}`,{projectId:r,environmentId:n},tt,i)})}disable(){return p(this,null,function*(){return this.is_enabled?this.update({is_enabled:false}):new y({},this._url,c)})}};var rt={projectId:"project"},Br=["parent","enable_smtp","restrict_robots","http_access","title","type"],er="/projects/:projectId/environments",Hr=/^ssh:\/\/([a-zA-Z0-9_-]+)@(.+)$/u,tr="pf:ssh:";var M=class c extends _{constructor(e,t){var r,n,i;super(t,rt,e,e,[],Br),this.id=e.id,this.status=(r=e.status)!=null?r:"inactive",this.head_commit=e.head_commit,this.name=e.name,this.parent=(n=e.parent)!=null?n:null,this.machine_name=e.machine_name,this.restrict_robots=e.restrict_robots,this.title=e.title,this.created_at=e.created_at,this.updated_at=e.updated_at,this.last_active_at=e.last_active_at,this.last_backup_at=e.last_backup_at,this.project=e.project,this.is_dirty=e.is_dirty,this.enable_smtp=e.enable_smtp,this.has_code=e.has_code,this.deployment_target=e.deployment_target,this.deployment_state=e.deployment_state,this.http_access=(i=e.http_access)!=null?i:{},this.is_main=e.is_main,this.type=e.type,this.edge_hostname=e.edge_hostname,this.has_deployment=e.has_deployment;}static get(e,t){return p(this,null,function*(){let d=e,{projectId:r,id:n}=d,i=oe$1(d,["projectId","id"]),{api_url:a}=R$2(),u=t?`${t}/:id`:`${a}${er}/:id`;return Xe$1(c,this,"_get").call(this,u,{project:r,id:n},rt,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${er}`,{project:r},rt,n)})}update(e){return p(this,null,function*(){return Xe$1(c.prototype,this,"update").call(this,e)})}getSshUrl(e=""){let t=this.getSshUrls();return this.hasLink("ssh")&&e===""?this.convertSshUrl(this.getLink("ssh")):t[e]?this.convertSshUrl(t[e]):this.constructLegacySshUrl(e)}constructLegacySshUrl(e=""){let t=e?`--${e}`:"";return this.convertSshUrl(this.getLink("ssh"),t)}convertSshUrl(e,t=""){let r=Hr.exec(e);if(r){let[,n,i]=r;return `${n}${t}@${i}`}}getSshUrls(){let e=this.getLinks();if(!e)return {};let t=Object.keys(e).filter(r=>r.startsWith(tr)).reduce((r,n)=>(r[n.substr(tr.length)]=e[n].href,r),{});return this.hasLink("ssh")&&Object.keys(t).length===0&&(t.ssh=`ssh://${this.constructLegacySshUrl()}`),t}branch(i,a,u){return p(this,arguments,function*(e,t,r,n=this.sanitizeId(e)){let d={name:n,title:e,type:t};return r&&(d.resources={init:r}),this.runLongOperation("branch","POST",d)})}sanitizeId(e){return Nr(e).substr(0,32)}delete(){return p(this,null,function*(){if(this.isActive())throw new Error("Active environments cannot be deleted");return Xe$1(c.prototype,this,"delete").call(this)})}isActive(){return this.status==="active"}activate(){return p(this,null,function*(){if(this.isActive())throw new Error("Active environments cannot be activated");return this.runLongOperation("activate","POST")})}deactivate(){return p(this,null,function*(){if(!this.isActive()&&this.status!=="paused")throw new Error("Inactive environments cannot be deactivated");return this.runLongOperation("deactivate","POST")})}merge(e){return p(this,null,function*(){if(!this.parent)throw new Error("The environment does not have a parent, so it cannot be merged");return this.runLongOperation("merge","POST",e)})}synchronize(e,t,r){return p(this,null,function*(){if(!e&&!t&&!r)throw new Error("Nothing to synchronize: you must specify data, code or resources");let n={synchronize_data:e,synchronize_code:t};return typeof r!="undefined"&&(n.synchronize_resources=r),this.runLongOperation("synchronize","post",n)})}backup(e=true){return p(this,null,function*(){return this.runLongOperation("backup","POST",{safe:e})})}redeploy(){return p(this,null,function*(){return this.runLongOperation("redeploy")})}resume(){return p(this,null,function*(){return this.runLongOperation("resume")})}pause(){return p(this,null,function*(){return this.runLongOperation("pause")})}getActivity(e){return p(this,null,function*(){return L$1.get({id:e},`${this.getUri()}/activities`)})}getActivities(e,t){return p(this,null,function*(){let r={type:e,starts_at:t};return L$1.query(r,`${this.getUri()}/activities`)})}getVariables(e){return p(this,null,function*(){return z.query({projectId:this.project,environmentId:this.id,limit:e},this.getLink("#manage-variables"))})}setVariable(e,t,r=false,n=true,i=true,a=false,u=true,d=true){return p(this,null,function*(){let _={name:e,value:t,is_json:r,is_enabled:n,is_inheritable:i,is_sensitive:a,visible_build:u,visible_runtime:d};return this.getVariable(e).then(b=>p(this,null,function*(){if(b!=null&&b.id)return b.update(_)})).catch(b=>b.code===404?(_.name=e,new z(_,this.getLink("#manage-variables")).save()):b)})}getVariable(e){return p(this,null,function*(){return z.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-variables"))})}setRoute(e){return p(this,null,function*(){return e.id?this.getRoute(e.id).then(t=>p(this,null,function*(){return t!=null&&t.id?t.update(e,`${this.getLink("#manage-routes")}/${encodeURIComponent(t.id)}`):new R(e,this.getLink("#manage-routes")).save()})):new R(e,this.getLink("#manage-routes")).save()})}getRoute(e){return p(this,null,function*(){return R.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-routes"))})}getRoutes(){return p(this,null,function*(){return R.query({projectId:this.project,environmentId:this.id},this.getLink("#manage-routes"))})}getRouteUrls(){let e=this.getLinks();if(!e)return [];let t=e["pf:routes"];return !t||!Array.isArray(t)?[]:t.map(r=>r.href)}initialize(e,t){return p(this,null,function*(){return this.runLongOperation("initialize","post",{profile:e,repository:t})})}getUser(e){return p(this,null,function*(){return j.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-access"))})}getUsers(){return p(this,null,function*(){return j.query({projectId:this.project,environmentId:this.id},this.getLink("#manage-access"))})}addUser(e,t,r=true){return p(this,null,function*(){let i={id:"",role:t,[r?"user":"email"]:e};return new j(i,this.getLink("#manage-access")).save()})}removeUser(e){return p(this,null,function*(){return j.get({projectId:this.project,environmentId:this.id,id:e},this.getLink("#manage-access")).then(t=>p(this,null,function*(){return t==null?void 0:t.delete()}))})}getMetrics(e){return p(this,null,function*(){let t=e?{q:e}:{};return N.get(t,`${this.getUri()}/metrics`)})}getHeadCommit(){return p(this,null,function*(){return W.get(this.project,this.head_commit)})}};var st={},rr="/projects/:projectId/environments/:environmentId/backups",be=class c extends _{constructor(e,t){var r,n;super(t,st,{},e,[],[]),this.id=e.id,this.created_at=e.created_at,this.updated_at=e.updated_at,this.attributes=(r=e.attributes)!=null?r:{},this.status=e.status,this.expires_at=e.expires_at,this.index=e.index,this.commit_id=e.commit_id,this.environment=e.environment,this.safe=(n=e.safe)!=null?n:true,this.restorable=e.restorable,this.automated=e.automated,this.size_of_volumes=e.size_of_volumes,this.size_used=e.size_used;}static get(e,t){return p(this,null,function*(){let _=e,{projectId:r,environmentId:n,id:i}=_,a=oe$1(_,["projectId","environmentId","id"]),{api_url:u}=R$2(),d=t?`${t}/:id`:`${u}${rr}/:id`;return Xe$1(c,this,"_get").call(this,d,{id:i,projectId:r,environmentId:n},st,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${rr}`,{projectId:r,environmentId:n},st,i)})}restore(e){return p(this,null,function*(){return this.runLongOperation("restore","POST",e)})}};var nt={},Kr=["is_default"],sr="/projects/:projectId/environments/:environmentId/domains",D=class c extends _{constructor(e,t){super(t,nt,{},e,["name","ssl","is_default","replacement_for"],Kr),this.id=e.id,this.name=e.name,this.is_default=e.is_default,this.created_at=e.created_at,this.ssl=e.ssl,this.updated_at=e.updated_at,this.replacement_for=e.replacement_for,this._required=["name"];}static get(e,t){return p(this,null,function*(){let d=e,{name:r,projectId:n,environmentId:i}=d,a=oe$1(d,["name","projectId","environmentId"]),{api_url:u}=R$2();return Xe$1(c,this,"_get").call(this,t?`${t}/:name`:`${u}${sr}`,{name:r,projectId:n,environmentId:i},nt,a)})}static query(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${a}${sr}`,{projectId:r,environmentId:n},nt,i)})}};var Yr={},Zr="admin",Xr="viewer",Ur=[Zr,Xr],es=["role","user","email"],ts=["role"],rs="/projects/:projectId/access",P=class c extends _{constructor(e,t){super(t,Yr,{},e,es,ts),this._required=["email"],this.id=e.id,this.email=e.email,this.role=e.role,this.user=e.user;}static query(e,t){return p(this,null,function*(){let{projectId:r}=e,{api_url:n}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${n}${rs}`,{projectId:r})})}getAccount(){return p(this,null,function*(){return O.get({id:this.user}).then(e=>{if(!e)throw new Error(`Account not found for user: ${this.id}`);return e})})}getUser(){let e=this.getEmbedded("users");return new w(e[0])}checkProperty(e,t){let r={};return e==="email"&&!Jr.validate(t)?r[e]=`Invalid email address: '${t}'`:e==="role"&&!Ur.includes(t)&&(r[e]=`Invalid role: '${t}'`),r}};var it="/projects/:projectId/environment-types/:id",ot={},fe=class c extends _{constructor(e){var n;let{id:t}=e,{api_url:r}=R$2();super(`${r}${it}`,ot,{id:t},e),this.id=e.id,this.accesses=(n=e.accesses)!=null?n:[];}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${it}`,{id:r},ot,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2(),i=e,{projectId:r}=i,n=oe$1(i,["projectId"]);return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${it}`),{projectId:r},ot,n)})}static createAccess(e){return p(this,null,function*(){let{projectId:t,environmentTypeId:r,email:n,role:i,user:a}=e,{api_url:u}=R$2(),d=`${u}/projects/${t}/environment-types/${r}/access`,_=yield ge(d,"POST",{email:n,role:i,user:a});return new P(_._embedded.entity,d)})}static updateAccess(e){return p(this,null,function*(){let{projectId:t,environmentTypeId:r,accessId:n,role:i}=e,{api_url:a}=R$2(),u=`${a}/projects/${t}/environment-types/${r}/access/${n}`,d=yield ge(u,"PATCH",{role:i});return new P(d._embedded.entity,u)})}static deleteAccess(e){return p(this,null,function*(){let{projectId:t,environmentTypeId:r,accessId:n}=e,{api_url:i}=R$2();return ge(`${i}/projects/${t}/environment-types/${r}/access/${n}`,"DELETE")})}getAccesses(){return p(this,null,function*(){let e=this.getLink("#access"),t=yield ge(e);this.accesses=[];for(let r of t)this.accesses.push(new P(r,`${e}/${r.id}`));return this.accesses})}};var at={},ss=["bitbucket","bitbucket_server","github","gitlab","hipchat","webhook","health.email","health.pagerduty","health.slack","health.webhook","script","syslog","splunk","sumologic","newrelic","httplog"],nr=["headers","host","port","protocol","facility","message_format","auth_mode","tls_verify","auth_token","index","sourcetype","addon_credentials","app_credentials","base_url","category","channel","from_address","license_key","project","recipients","repository","resync_pull_requests","room","routing_key","shared_key","script","token","url","username","events","environments","excluded_environments","states","build_draft_pull_requests","build_merge_requests","build_pull_requests","build_pull_requests_post_merge","build_wip_merge_requests","fetch_branches","merge_requests_clone_parent_data","prune_branches","pull_requests_clone_parent_data"],ir="/projects/:projectId/integrations",q=class c extends _{constructor(e,t){super(t,at,e,e,nr.concat("type"),nr),this.id=e.id,this.type=e.type,this.token_type=e.token_type,this.app_credentials=e.app_credentials,this.addon_credentials=e.addon_credentials,this.repository=e.repository,this.fetch_branches=e.fetch_branches,this.prune_branches=e.prune_branches,this.build_pull_requests=e.build_pull_requests,this.resync_pull_requests=e.resync_pull_requests,this.url=e.url,this.username=e.username,this.project=e.project,this.pull_requests_clone_parent_data=e.pull_requests_clone_parent_data,this.environments_credentials=e.environments_credentials,this.supported_runtimes=e.supported_runtimes,this.events=e.events,this.environments=e.environments,this.excluded_environments=e.excluded_environments,this.states=e.states,this.result=e.result,this.service_id=e.service_id,this.base_url=e.base_url,this.build_draft_pull_requests=e.build_draft_pull_requests,this.build_pull_requests_post_merge=e.build_pull_requests_post_merge,this.build_wip_merge_requests=e.build_wip_merge_requests,this.build_merge_requests=e.build_merge_requests,this.merge_requests_clone_parent_data=e.merge_requests_clone_parent_data,this.from_address=e.from_address,this.recipients=e.recipients,this.routing_key=e.routing_key,this.channel=e.channel,this.room=e.room,this.tls_verify=e.tls_verify,this.script=e.script,this.index=e.index,this.sourcetype=e.sourcetype,this.category=e.category,this.host=e.host,this.port=e.port,this.protocol=e.protocol,this.facility=e.facility,this.message_format=e.message_format,this.headers=e.headers,this.shared_key=e.shared_key,this.token=e.token,this._required=["type"];}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,id:n}=u,i=oe$1(u,["projectId","id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t?`${t}/:id`:`${a}${ir}/:id`,{projectId:r,id:n},at,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${ir}`,{projectId:r},at,n)})}checkProperty(e,t){let r={};return e==="type"&&!ss.includes(t)&&(r[e]=`Invalid type: '${t}'`),r}getActivity(e){return p(this,null,function*(){return L$1.get({id:e},`${this.getUri()}/activities`)})}getActivities(e,t){return p(this,null,function*(){let r={type:e,starts_at:t};return L$1.query(r,`${this.getUri()}/activities`)})}triggerHook(){return p(this,null,function*(){let e=this.getLink("#hook");return N$1(e,"post")})}};var ar="/projects/:projectId/invitations",or=`${ar}/:id`,ns=["projectId","environments","permissions","role","email","force"],ve=class c extends _{constructor(e,t){var a,u,d;let{projectId:r,id:n}=e,{api_url:i}=R$2();super(t!=null?t:`${i}${or}`,{},{projectId:r,id:n},e,ns,[]),this._queryUrl=_.getQueryUrl(this._url),this.id=e.id,this.owner=(a=e.owner)!=null?a:{},this.projectId=e.projectId,this.environments=(u=e.environments)!=null?u:[],this.permissions=(d=e.permissions)!=null?d:[],this.state=e.state,this.email=e.email,this.role=e.role,this.force=e.force,this.created_at=e.created_at,this.updated_at=e.updated_at,this.finished_at=e.finished_at;}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${or}`,{id:t,projectId:e})})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${ar}`,{projectId:e},{},{},r=>Array.isArray(r)?r.map(n=>g$1({projectId:e},n)):[])})}delete(){return p(this,null,function*(){return ge(this._url,"DELETE")})}};var cr="/organizations/:organizationId/discounts",is={},os=["code"],B=class c extends _{constructor(e,t){var n;let{api_url:r}=R$2();super(t!=null?t:`${r}${cr}`,is,{},e,os),this.items=(n=e.items)!=null?n:[],this.code=e.code;}static get(e,t){return p(this,null,function*(){let a=e,{organizationId:r}=a,n=oe$1(a,["organizationId"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${cr}`,{organizationId:r},{},n)})}};var ct=class{constructor(e,t,r){this.baseUrl=e,this.links=t,this.DataType=r;}getPage(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield ge(b(this.links,e,true,t));return new ie(this.baseUrl,r==null?void 0:r.items,r==null?void 0:r._links,this.DataType)})}next(){return p(this,null,function*(){return this.getPage("next")})}previous(){return p(this,null,function*(){return this.getPage("Previous")})}getUser(){return p(this,null,function*(){return this.getRef("ref:users:0",$)})}getUsers(){return p(this,null,function*(){return this.getRefs("ref:users",$)})}getRef(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return O$1(this.links,e,t,true,r)})}getRefs(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return w$1(this.links,e,t,true,r)})}hasMore(){return !!T$1(this.links,"next")}},ie=class{constructor(e,t,r,n){this.baseUrl=e,this.items=t==null?void 0:t.map(i=>new n(i,`${e}/${i.id}`)),this.links=r,this.DataType=n,this.linksManager=new ct(this.baseUrl,r,n);}getLinksManager(){return this.linksManager}getItems(){return this.items}};var T=class extends _{static queryCursoredResult(e,t,r,n,i,a){return p(this,null,function*(){let u=f(e,t,r),d=yield ge(u,"GET",n,{},0,a);return new ie(u,d==null?void 0:d.items,d==null?void 0:d._links,i)})}};var pt={},ut="/organizations/:organizationId/members",as=["user_id","permissions"],cs=["permissions"],L=class c extends T{constructor(e,t){var i;let{organizationId:r}=e,{api_url:n}=R$2();super(t!=null?t:`${n}${ut}`,pt,{organizationId:r},e,as,cs),this.id=e.id,this.user_id=e.user_id,this.organization_id=r,this.permissions=(i=e.permissions)!=null?i:[],this.owner=e.owner,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let u=e,{organizationId:r,id:n}=u,i=oe$1(u,["organizationId","id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${ut}/:id`,{organizationId:r,id:n},pt,i)})}static query(e,t){return p(this,null,function*(){let a=e,{organizationId:r}=a,n=oe$1(a,["organizationId"]),{api_url:i}=R$2();return Xe$1(c,this,"queryCursoredResult").call(this,t!=null?t:`${i}${ut}`,{organizationId:r},pt,n,c)})}delete(){return p(this,null,function*(){return Xe$1(c.prototype,this,"delete").call(this,this.getLink("delete"))})}getUser(){return p(this,null,function*(){return this.getRef("ref:users:0",$)})}};var mt={id:"name"},ps=["name","value","is_json","is_sensitive","visible_build","visible_runtime"],us=["value","is_json","is_sensitive","visible_build","visible_runtime"],pr="/projects/:projectId/variables",S=class c extends _{constructor(e,t){var r;super(t,mt,{},e,ps,us),this.id=e.id,this.name=e.name,this.value=e.value,this.is_json=e.is_json,this.is_sensitive=e.is_sensitive,this.visible_build=e.visible_build,this.visible_runtime=(r=e.visible_runtime)!=null?r:true,this.created_at=e.created_at,this.updated_at=e.updated_at;}static get(e,t){return p(this,null,function*(){let d=e,{name:r,projectId:n}=d,i=oe$1(d,["name","projectId"]),{api_url:a}=R$2(),u=t!=null?t:`${a}${pr}`;return Xe$1(c,this,"_get").call(this,`${u}/:id`,{name:r,projectId:n},mt,i)})}static query(e,t){return p(this,null,function*(){let a=e,{projectId:r}=a,n=oe$1(a,["projectId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${pr}`,{projectId:r},mt,n)})}};var mr={},gs=["default_domain","title","default_branch","timezone"],Pe,H=class c extends _{constructor(e,t){var r,n;super(t,mr,{},e,[],gs),this._queryUrl=_.getQueryUrl(t),this.id=e.id,this.cluster=e.cluster,this.cluster_label=e.cluster_label,this.title=e.title,this.created_at=e.created_at,this.updated_at=e.updated_at,this.name=e.name,this.owner=e.owner,this.owner_info=(r=e.owner_info)!=null?r:{},this.plan=e.plan,this.plan_uri=e.plan_uri,this.hipaa=e.hipaa,this.enterprise_tag=e.enterprise_tag,this.subscription=e.subscription,this.subscription_id=e.subscription_id,this.environment_id=e.environment_id,this.status=e.status,this.endpoint=e.endpoint,this.repository=e.repository,this.region=e.region,this.region_label=e.region_label,this.vendor=e.vendor,this.vendor_label=e.vendor_label,this.vendor_resources=e.vendor_resources,this.vendor_website=e.vendor_website,this.default_domain=e.default_domain,this.organization_id=(n=e.organization_id)!=null?n:e.organization,this.default_branch=e.default_branch,this.timezone=e.timezone;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}/projects/:id`,{id:r},mr,n)})}getSubscriptionId(){var e;if(this.subscription_id)return this.subscription_id;if((e=this.subscription)!=null&&e.license_uri)return require$$1$6.basename(this.subscription.license_uri,require$$1$6.extname(this.subscription.license_uri));throw new Error("Subscription ID not found")}getGitUrl(){if(!this.repository){let e=ms(this.getUri());return `${this.id}@git.${e==null?void 0:e[3]}:${this.id}.git`}return this.repository.url}getUsers(){return p(this,null,function*(){return P.query({projectId:this.id},this.getLink("#access"))})}addUser(e,t,r=false){return p(this,null,function*(){let i={role:t,[r?"user":"email"]:e};return new P(i,this.getLink("access")).save()})}getEnvironment(e){return p(this,null,function*(){return M.get({projectId:this.id,id:e},this.getLink("environments"))})}getLink(e,t=true){return this.hasLink(e)?super.getLink(e,t):e==="self"||e==="#edit"?this.endpoint:e==="#manage-variables"?`${this.getUri()}/variables`:`${this.getUri()}/${e.trim().replace("#","")}`}getEnvironments(e){return p(this,null,function*(){return M.query({projectId:this.id,limit:e},this.getLink("environments"))})}getDomains(e){return p(this,null,function*(){return k.query({projectId:this.id,limit:e},this.getLink("domains"))})}getEnvironmentDomains(e){return p(this,null,function*(){return D.query({projectId:this.id,environmentId:e},this.getLink(`environments/${e}/domains`))})}addEnvironmentDomain(e,t,r,n){return p(this,null,function*(){let i={name:e,replacement_for:r};return n!=null&&n.length&&(i.ssl=n),r?i.replacement_for=r:i.is_default=true,r||(i.is_default=true),new D(i,this.getLink(`environments/${t}/domains`)).save()})}getDomain(e){return p(this,null,function*(){return k.get({name:e},this.getLink("domains"))})}addDomain(r){return p(this,arguments,function*(e,t=[]){let n={name:e};return t.length&&(n.ssl=t),new k(n,this.getLink("domains")).save()})}getIntegrations(e){return p(this,null,function*(){return q.query({projectId:this.id,limit:e},this.getLink("integrations"))})}getIntegration(e){return p(this,null,function*(){return q.get({projectId:this.id,id:e},this.getLink("integrations"))})}addIntegration(e,t){return p(this,null,function*(){let r=g$1({type:e},t);return new q(r,this.getLink("integrations")).save()})}getActivity(e){return p(this,null,function*(){return L$1.get({id:e},`${this.getUri()}/activities`)})}getActivities(e,t){return p(this,null,function*(){let r=t==null?void 0:t.toISOString(),n={type:e,starts_at:r};return L$1.query(n,`${this.getUri()}/activities`)})}isSuspended(){return this.status==="suspended"}getVariables(e){return p(this,null,function*(){return S.query({projectId:this.id,limit:e},this.getLink("#manage-variables"))})}setVariable(e,t,r=false,n=false,i=true,a=true){return p(this,null,function*(){let u={name:e,value:t,is_json:r,is_sensitive:n,visible_build:i,visible_runtime:a};return this.getVariable(e).then(d=>p(this,null,function*(){if(d!=null&&d.name)return d.update(u)})).catch(d=>d.code===404?(u.name=e,new S(u,this.getLink("#manage-variables")).save()):d)})}getVariable(e){return p(this,null,function*(){return S.get({projectId:this.id,name:e},this.getLink("#manage-variables"))})}getCertificates(){return p(this,null,function*(){return F.query({},`${this.getUri()}/certificates`)})}addCertificate(n,i){return p(this,arguments,function*(e,t,r=[]){return new F({certificate:e,key:t,chain:r},`${this.getUri()}/certificates`).save()})}subscribe(){return p(this,null,function*(){Pe&&Pe.close();let{api_url:e}=R$2();return ct$1(`${e}/projects/${this.id}/subscribe`).then(t=>(Pe=t,Pe))})}loadTheme(){return p(this,null,function*(){return fetch(`${this.vendor_resources}/vendor.json`).then(e=>p(this,null,function*(){return e.json()})).then(e=>g$1({logo:`${this.vendor_resources}/images/logo.svg`,smallLogo:`${this.vendor_resources}/images/logo-ui.svg`,emailLogo:`${this.vendor_resources}/images/logo-email.png`},e))})}getCapabilities(){return p(this,null,function*(){return ge(this.getLink("capabilities"))})}};var gt={},ls=["project_region","plan","project_title","storage","environments","options_url","vendor","options_custom","default_branch"],ys=["plan","environments","storage","big_dev","backups","blackfire","observability_suite","continuous_profiling"],xe="/subscriptions/:id",_s=["development","standard","medium","large"],hs=["eu.platform.sh","us.platform.sh"];var K=class c extends _{constructor(e,t){var n,i,a,u,d,_$1,b;let{api_url:r}=R$2();super(t!=null?t:`${r}${xe}`,gt,e,e,ls,ys),this.green=(n=e.green)!=null?n:false,this._queryUrl=_.getQueryUrl(t!=null?t:`${r}${xe}`),this._required=["project_region"],this.id=e.id,this.status=(i=e.status)!=null?i:"provisioning Failure",this.owner=e.owner,this.plan=e.plan,this.environments=e.environments,this.storage=e.storage,this.big_dev=e.big_dev,this.backups=e.backups,this.user_licenses=e.user_licenses,this.project_id=e.project_id,this.project_title=e.project_title,this.project_region=e.project_region,this.project_region_label=e.project_region_label,this.project_ui=e.project_ui,this.vendor=e.vendor,this.owner_info=(a=e.owner_info)!=null?a:{type:""},this.organization=e.organization,this.created_at=e.created_at,this.updated_at=e.updated_at,this.users_licenses=e.users_licenses,this.license_uri=e.license_uri,this.organization_id=e.organization_id,this.project_options=(u=e.project_options)!=null?u:{plan_title:{},sellables:{blackfire:{products:[],available:false},observability_suite:{products:[],available:false}},initialize:{}},this.resources=e.resources,this.resources_limit=(d=e.resources_limit)!=null?d:{limit:{},used:{projects:[],totals:{}}},this.enterprise_tag=e.enterprise_tag,this.support_tier=e.support_tier,this.blackfire=e.blackfire,this.observability_suite=e.observability_suite,this.environment_options=(_$1=e.environment_options)!=null?_$1:[],this.continuous_profiling=(b=e.continuous_profiling)!=null?b:null,this.options_url=e.options_url,this.options_custom=e.options_custom,this.default_branch=e.default_branch;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${xe}`,{id:r},gt,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${xe}`),{},gt,e,r=>r.subscriptions)})}static getAvailablePlans(){return _s}static getAvailableRegions(){return hs}wait(e,t=2){return p(this,null,function*(){let r=t*1e3;return new Promise(n=>{let i=setInterval(()=>{if(!this.isPending()){n(this),clearInterval(i);return}this.refresh().then(()=>{e&&e(this);});},r);})})}checkProperty(e,t){let r={};return e==="storage"&&typeof t=="number"&&t<1024?r[e]="Storage must be at least 1024 MiB":e==="activation_callback"&&typeof t!="number"&&(t!=null&&t.uri?ds(t.uri)||(r[e]="Invalid URI in activation callback"):r[e]="A 'uri' key is required in the activation callback"),r}isPending(){let e=this.getStatus();return e==="provisioning"||e==="requested"}isActive(){return this.getStatus()==="active"}getStatus(){return this.status}getProject(){return p(this,null,function*(){if(!this.hasLink("project")&&!this.isActive())throw new Error("Inactive subscriptions do not have projects.");return H.get({id:this.project_id},this.getLink("project"))})}getEstimate(e){return p(this,null,function*(){var r,n,i,a,u,d;let t=g$1({plan:(r=e==null?void 0:e.plan)!=null?r:this.plan,storage:(n=e==null?void 0:e.storage)!=null?n:this.storage,environments:(i=e==null?void 0:e.environments)!=null?i:this.environments,user_licenses:(a=e==null?void 0:e.user_licenses)!=null?a:this.users_licenses,big_dev:(u=this.big_dev)!=null?u:void 0,backups:(d=this.backups)!=null?d:void 0,format:e==null?void 0:e.format},e);return ge(`${this._queryUrl}/${this.id}/estimate`,"GET",t)})}wrap(e){return _.wrap(e!=null&&e.subscriptions?e.subscriptions:[])}operationAvailable(e){return e==="edit"?true:super.operationAvailable(e)}getLink(e,t=true){return e==="#edit"||e==="#delete"?this.getUri(t):super.getLink(e,t)}copy(e={}){var t;super.copy(((t=e.subscriptions)==null?void 0:t[0])||e);}};var dt="/organizations/:organizationId/subscriptions/:id",J=class c extends K{constructor(e,t){let{organizationId:r}=e,{api_url:n}=R$2(),i=f(t!=null?t:`${n}${dt}`,{organizationId:r},{});super(e,i),this._required=["project_region","organization_id"],this._creatableField.push("organizationId"),this.agency_site=e.agency_site,this.big_dev_service=e.big_dev_service,this.fastly_service_ids=e.fastly_service_ids,this.hipaa=e.hipaa,this.invoiced=e.invoiced,this.is_trial_plan=e.is_trial_plan,this.locked=e.locked,this.project_notes=e.project_notes,this.services=e.services;}static get(e,t){return p(this,null,function*(){let u=e,{organizationId:r,id:n}=u,i=oe$1(u,["organizationId","id"]),{api_url:a}=R$2();return _._get.call(this,t!=null?t:`${a}${dt}`,{organizationId:r,id:n},{},i)})}static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return T.queryCursoredResult(this.getQueryUrl(`${n}${dt}`),{organizationId:t},{},r,c,{queryStringArrayPrefix:"[]"})})}static getCanCreate(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}/organizations/${e.organizationId}/subscriptions/can-create`,"GET")})}getOrganizations(){return p(this,null,function*(){return this.getRefs("ref:organizations",E)})}};var lt="/organizations/:organizationId/vouchers",bs={},fs=["code"],Q=class c extends _{constructor(e,t){var n,i;let{api_url:r}=R$2();super(t!=null?t:`${r}${lt}`,bs,{},e,fs),this.code=e.code,this.currency=e.currency,this.discounted_orders=(n=e.discounted_orders)!=null?n:[],this.vouchers=(i=e.vouchers)!=null?i:[],this.vouchers_applied=e.vouchers_applied,this.vouchers_remaining_balance=e.vouchers_remaining_balance,this.vouchers_total=e.vouchers_total;}static get(e,t){return p(this,null,function*(){let a=e,{organizationId:r}=a,n=oe$1(a,["organizationId"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${lt}`,{organizationId:r},{},n)})}static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return Xe$1(c,this,"_query").call(this,`${n}${lt}`,{organizationId:t},{},r,a=>a.vouchers)})}};var yt={},Ie="/organizations",vs="/users/:userId/organizations",Ps=["name","label","country"],xs=["name","label","country"],E=class c extends _{constructor(e,t){var n;let{api_url:r}=R$2();super(t!=null?t:`${r}${Ie}/:id`,yt,{},e,Ps,xs),this.id=e.id,this.user_id=e.user_id,this.name=e.name,this.label=e.label,this.country=e.country,this.owner_id=e.owner_id,this.created_at=e.created_at,this.updated_at=e.updated_at,this.capabilities=(n=e.capabilities)!=null?n:[],this.status=e.status,this.vendor=e.vendor,this._queryUrl=t!=null?t:`${r}${Ie}`;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${Ie}/:id`,{id:r},yt,n)})}static query(){return p(this,arguments,function*(e={},t){let{api_url:r}=R$2(),u=e,{userId:n}=u,i=oe$1(u,["userId"]),a=`${r}${Ie}`;return n&&(a=`${r}${vs}`),Xe$1(c,this,"_query").call(this,t!=null?t:a,{userId:n},yt,i,d=>Array.isArray(d)?[]:d==null?void 0:d.items)})}getMembers(){return p(this,null,function*(){return L.query({organizationId:this.id})})}addMember(e){return p(this,null,function*(){return new L(g$1({organizationId:this.id},e)).save()})}getDiscounts(){return p(this,null,function*(){return B.get({organizationId:this.id})})}getVouchers(){return p(this,null,function*(){return Q.get({organizationId:this.id})})}addVoucher(e){return p(this,null,function*(){let{api_url:t}=R$2();return new Q({organizationId:this.id,code:e},`${t}/organizations/${this.id}/vouchers/apply`).save()})}getEstimate(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=`${t}/organizations/${this.id}/estimate`;return ge(r,"GET",e)})}getLink(e,t=true){return this.hasLink(e)?super.getLink(e,t):""}delete(){return p(this,null,function*(){return Xe$1(c.prototype,this,"delete").call(this,this.getLink("delete"))})}addSubscription(e){return p(this,null,function*(){return new J(I$2(g$1({},e),{organizationId:this.id})).save()})}getWizardSteps(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=`${t}/organizations/${this.id}/setup/wizard/${e.template}`;return ge(r,"GET")})}};var Ce="/me",Is=["picture","mail","display_name","username","newsletter","plaintext","company_role","company_type","website","ssh_keys"],$e=class c extends w{constructor(e){var r,n,i,a,u,d;let{api_url:t}=R$2();super(e,`${t}${Ce}`,Is),this.projects=(r=e.projects)!=null?r:[],this.ssh_keys=(n=e.ssh_keys)!=null?n:[],this.roles=(i=e.roles)!=null?i:[],this.teams=(a=e.teams)!=null?a:[],this.picture=e.picture,this.newsletter=e.newsletter,this.plaintext=e.plaintext,this.website=e.website,this.company_role=e.company_role,this.company_type=e.company_type,this.mail=e.mail,this.trial=e.trial,this.uuid=e.uuid,this.current_trial=(u=e.current_trial)!=null?u:{},this.stripe=(d=e.stripe)!=null?d:{public_key:""};}static get(e=false){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}${Ce}`,{},{},{},{cache:e?"reload":"default"})})}update(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield Xe$1(c.prototype,this,"update").call(this,e,`${t}/profiles/:id`);return new y(new c(r.data))})}phone(e=false){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${Ce}/phone?${e?"force_refresh=1":""}`,"POST")})}kycVerification(e=false){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${Ce}/verification?${e?"force_refresh=1":""}`,"POST")})}getOrganizations(){return p(this,null,function*(){return this.getRefs("ref:organizations",E)})}};var _t="/orders/:id",ht={},Y=class c extends _{constructor(e){var n,i,a;let{id:t}=e,{api_url:r}=R$2();super(`${r}${_t}`,ht,{id:t},e),this.id=t,this.status=e.status,this.owner=e.owner,this.address=(n=e.address)!=null?n:{},this.vat_number=e.vat_number,this.billing_period_start=e.billing_period_start,this.billing_period_end=e.billing_period_end,this.last_refreshed=e.last_refreshed,this.total=e.total,this.total_formatted=e.total_formatted,this.components=(i=e.components)!=null?i:{},this.currency=e.currency,this.invoice_url=e.invoice_url,this.line_items=(a=e.line_items)!=null?a:[],this.billing_period_label=e.billing_period_label;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${_t}`,{id:r},ht,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,this.getQueryUrl(`${t}${_t}`),{},ht,e,r=>r==null?void 0:r.commerce_order)})}};var Z="/organizations/:organizationId/address",bt={},Cs=["country","name_line","premise","sub_premise","thoroughfare","administrative_area","sub_administrative_area","locality","dependent_locality","postal_code"],je=class c extends _{constructor(e,t){let{id:r}=e,{api_url:n}=R$2();super(t!=null?t:`${n}${Z}`,bt,{id:r},e,[],Cs),this._queryUrl=_.getQueryUrl(`${n}${Z}`),this.id=e.id,this.country=e.country,this.name_line=e.name_line,this.premise=e.premise,this.sub_premise=e.sub_premise,this.thoroughfare=e.thoroughfare,this.administrative_area=e.administrative_area,this.sub_administrative_area=e.sub_administrative_area,this.locality=e.locality,this.dependent_locality=e.dependent_locality,this.postal_code=e.postal_code;}static getQueryUrl(e,t){return f(e,{id:t})}static get(e,t){return p(this,null,function*(){let d=e,{organizationId:r,id:n}=d,i=oe$1(d,["organizationId","id"]),{api_url:a}=R$2(),u=t!=null?t:`${a}${Z}`;return n&&(u=this.getQueryUrl(t!=null?t:`${a}${Z}`,n)),Xe$1(c,this,"_get").call(this,u,{organizationId:r,id:n},bt,i)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2(),{organizationId:r}=e;return Xe$1(c,this,"_get").call(this,`${t}${Z}`,{organizationId:r},bt,e)})}update(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c.prototype,this,"update").call(this,e,f(`${r}${Z}`,{organizationId:t},{}))})}};var ft="/organizations/:organizationId/invitations",gr=`${ft}/:id`,$s=["permissions","email","force"],Re=class c extends _{constructor(e,t){var a,u;let{organizationId:r,id:n}=e,{api_url:i}=R$2();super(t!=null?t:`${i}${gr}`,{},{organizationId:r,id:n},e,$s,[]),this._queryUrl=_.getQueryUrl(this._url),this.id=n,this.owner=(a=e.owner)!=null?a:{},this.organization_id=r,this.permissions=(u=e.permissions)!=null?u:[],this.state=e.state,this.email=e.email,this.force=e.force;}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_get").call(this,`${r}${gr}`,{id:t,organizationId:e})})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${ft}`,{organizationId:e},{},{})})}static getList(e,t=""){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,`${r}${ft}?${t}`,{organizationId:e},{},{})})}delete(){return p(this,null,function*(){let{api_url:e}=R$2();return Xe$1(c.prototype,this,"delete").call(this,`${e}/organizations/${this.organization_id}/invitations/${this.id}`)})}};var dr="/organizations/:organizationId/orders/:id",Ae=class extends Y{static get(e,t){return p(this,null,function*(){let d=e,{organizationId:r,id:n,includeDetails:i}=d,a=oe$1(d,["organizationId","id","includeDetails"]),{api_url:u}=R$2();return i&&(a.mode="details"),_._get.call(this,t!=null?t:`${u}${dr}`,{organizationId:r,id:n},{},a)})}static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return _._query.call(this,this.getQueryUrl(`${n}${dr}`),{organizationId:t},{},r,a=>a.items)})}};var X="/payment_source",vt={},js=["type","token","email","chargeable"],U=class c extends _{constructor(e,t,r){let{api_url:n}=R$2();super(t!=null?t:`${n}${X}`,vt,r!=null?r:{},e,js),this.id=e.id,this.type=e.type,this.token=e.token,this.email=e.email,this.type_label=e.type_label,this.name=e.name,this.number=e.number,this.card=e.card,this.mandate=e.mandate,this.chargeable=e.chargeable,this.payment_category=e.payment_category;}static get(){return p(this,arguments,function*(e={},t){let{api_url:r}=R$2(),n=f(t!=null?t:`${r}${X}`,vt,e);return ge(n,"GET",e).then(i=>{if(typeof i!="undefined")return new c(this.formatDetails(i.payment_source))}).catch(()=>new c({}))})}static query(){return p(this,arguments,function*(e={},t){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${r}${X}`,{},vt,e)})}static delete(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(e!=null?e:`${t}${X}`,"DELETE")})}static getAllowed(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${X}/allowed`,"GET")})}static intent(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${X}/intent`,"POST")})}static formatDetails(e){switch(e.type){case "credit-card":e.card=e.data;break;default:e.mandate=e.data;break}return e}};var ee="/organizations/:organizationId/payment-source",Rs={},Oe=class c extends U{constructor(e,t){let{api_url:r}=R$2(),a=e,{organizationId:n}=a,i=oe$1(a,["organizationId"]);super(i,t!=null?t:`${r}${ee}`,{organizationId:n});}static get(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),u=e,{organizationId:n}=u,i=oe$1(u,["organizationId"]),a=f(t!=null?t:`${r}${ee}`,{organizationId:n},Rs);return ge(a,"GET",i).then(d=>{if(typeof d!="undefined")return new c(this.formatDetails(d.payment_source))}).catch(()=>new c({}))})}static delete(){return p(this,null,function*(){let{api_url:e}=R$2();return ge(`${e}${ee}`,"DELETE")})}static getAllowed(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ee}`,{organizationId:e},{});return ge(`${r}/allowed`,"GET")})}static intent(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ee}`,{organizationId:e},{});return ge(`${r}/intent`,"POST")})}static setVerificationMethodAsPaymentMethod(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ee}`,{organizationId:e},{});return ge(`${r}`,"PATCH",{chargeable:true})})}};var lr="/organizations/:organizationId/profile",As={},Os=["default_catalog","marketing","company_name","security_contact","website_url"],ks=["default_catalog","marketing","company_name","security_contact","website_url","vat_number","billing_contact"],ke=class c extends _{constructor(e,t){var n,i,a;let{api_url:r}=R$2();super(t!=null?t:`${r}${lr}`,As,{organizationId:e.organizationId},e,Os,ks),this.stripe=(n=e.stripe)!=null?n:{},this.security_contact=e.security_contact,this.vat_number=e.vat_number,this.billing_contact=e.billing_contact,this.default_catalog=e.default_catalog,this.company_name=e.company_name,this.website_url=e.website_url,this.current_trial=(i=e.current_trial)!=null?i:{},this.resources_limit=(a=e.resources_limit)!=null?a:{},this.account_tier=e.account_tier,this.currency=e.currency,this.invoiced=e.invoiced;}static get(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return Xe$1(c,this,"_get").call(this,`${n}${lr}`,{organizationId:t},{},r)})}};var Pt="/regions",yr={},te=class c extends _{constructor(e){var n,i,a;let{id:t}=e,{api_url:r}=R$2();super(`${r}${Pt}`,yr,{id:t},e),this._queryUrl=_.getQueryUrl(Pt),this.id=e.id,this.available=e.available,this.endpoint=e.endpoint,this.label=e.label,this.private=(n=e.private)!=null?n:true,this.provider=(i=e.provider)!=null?i:{},this.zone=e.zone,this.project_label=e.project_label,this.environmental_impact=(a=e.environmental_impact)!=null?a:{carbon_intensity:0},this.selection_label=e.selection_label,this.timezone=e.timezone,this.datacenter=e.datacenter;}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${Pt}`,{},yr,e,r=>r.regions)})}};var ws="/organizations/:organizationId/regions/:id",we=class c extends te{static query(e){return p(this,null,function*(){let i=e,{organizationId:t}=i,r=oe$1(i,["organizationId"]),{api_url:n}=R$2();return T.queryCursoredResult(this.getQueryUrl(`${n}${ws}`),{organizationId:t},{},r,c,{queryStringArrayPrefix:"[]"})})}};var xt="/setup/config",zs={},ze=class c extends _{constructor(e,t=`${xt}?service=:service&format=:format`){super(t,zs,{},e,[]),this._queryUrl=_.getQueryUrl(t),this.app=e.app,this.service=e.service;}static get(n,i){return p(this,arguments,function*({service:e="",format:t="commented"},r){let{api_url:a}=R$2(),u=r!=null?r:`${a}${xt}?service=:service&format=:format`,d=f(u,{service:e,format:t});return ge(d,"POST").then(_=>typeof _=="undefined"?void 0:new c(_,xt))})}};var It="/setup/registry",qs={},qe=class c extends _{constructor(e,t=`${It}?service=:name`,r=[]){var n,i,a,u,d;super(t,qs,{},e,[],r),this._queryUrl=_.getQueryUrl(t),this.description=e.description,this.repo_name=e.repo_name,this.disk=(n=e.disk)!=null?n:null,this.docs=(i=e.docs)!=null?i:{},this.endpoint=e.endpoint,this.min_disk_size=(a=e.min_disk_size)!=null?a:null,this.name=e.name,this.runtime=(u=e.runtime)!=null?u:null,this.type=e.type,this.versions=(d=e.versions)!=null?d:{};}static get(e,t){return p(this,null,function*(){let d=e,{name:r}=d,n=oe$1(d,["name"]),{api_url:i}=R$2(),a=t!=null?t:`${i}${It}?service=:name`,u=f(a,e);return ge(u,"POST",n).then(_=>typeof _=="undefined"?void 0:new c(_,It))})}};var _r={},Se="/ssh_keys/:id",Ee=class c extends _{constructor(e){let{id:t}=e,{api_url:r}=R$2();super(`${r}${Se}`,_r,{id:t},e,["title","value"]),this._required=["value"],this._queryUrl=_.getQueryUrl(`${r}${Se}`),this.changed=e.changed,this.id=t,this.title=e.title,this.key_id=e.key_id,this.fingerprint=e.fingerprint,this.value=e.value;}static get(e){return p(this,null,function*(){let i=e,{id:t}=i,r=oe$1(i,["id"]),{api_url:n}=R$2();return Xe$1(c,this,"_get").call(this,`${n}${Se}`,{id:t},_r,r)})}save(){return p(this,null,function*(){let e=yield Xe$1(c.prototype,this,"save").call(this);return new c(e.data)})}getLink(e,t=false){if(e==="#delete"){let{api_url:r}=R$2();return f(`${r}${Se}`,{id:this.key_id})}return super.getLink(e,t)}checkProperty(e,t){let r={};return e==="value"&&!this.validatePublicKey(t)&&(r[e]="The SSH key is invalid"),r}validatePublicKey(e){if(!e.replace(/\s+/u," ").includes(" "))return  false;let r=e.split(" ",3),n;try{n=Es(r[1]);}catch(i){return  false}return !!n}};var $t={},jt="/teams/:teamId/members",hr=["role"],oe=class c extends _{constructor(e,t){let{teamId:r}=e,{api_url:n}=R$2();super(t!=null?t:`${n}${jt}`,$t,{teamId:r},e,hr,hr),this.user=e.user,this.role=e.role;}static get(e,t){return p(this,null,function*(){let u=e,{teamId:r,id:n}=u,i=oe$1(u,["teamId","id"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${jt}/:id`,{teamId:r,id:n},$t,i)})}static query(e,t){return p(this,null,function*(){let a=e,{teamId:r}=a,n=oe$1(a,["teamId"]),{api_url:i}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${i}${jt}`,{teamId:r},$t,n)})}};var Rt={},Fe="/teams",Fs=["name","parent","id"],Ms=["name"],Me=class c extends _{constructor(e,t){let{api_url:r}=R$2();super(t!=null?t:`${r}${Fe}`,Rt,{},e,Fs,Ms),this.id=e.id,this.name=e.name,this.parent=e.parent,this.organization=e.organization;}static get(e,t){return p(this,null,function*(){let a=e,{id:r}=a,n=oe$1(a,["id"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${Fe}/:id`,{id:r},Rt,n)})}static query(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return Xe$1(c,this,"_query").call(this,t!=null?t:`${r}${Fe}`,{},Rt,e)})}getMembers(){return p(this,null,function*(){return oe.query({teamId:this.id})})}addMember(e){return p(this,null,function*(){return new oe(I$2(g$1({},e),{teamId:this.id})).save()})}getLink(e,t=true){if(this.hasLink(e))return super.getLink(e,t);if(e==="self"){let{api_url:r}=R$2();return `${r}${Fe}/:id`}return ""}};var De="/tickets",At={},Le=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${De}`,At,{},e,[],[]),this.ticket_id=e.ticket_id,this.created=e.created,this.updated=e.updated,this.type=e.type,this.subject=e.subject,this.description=e.description,this.priority=e.priority,this.followup_tid=e.followup_tid,this.status=e.status,this.recipient=e.recipient,this.requester_id=e.requester_id,this.submitter_id=e.submitter_id,this.assignee_id=e.assignee_id,this.organization_id=e.organization_id,this.collaborator_ids=e.collaborator_ids,this.has_incidents=e.has_incidents,this.due=e.due,this.tags=e.tags,this.subscription_id=e.subscription_id,this.ticket_group=e.ticket_group,this.support_plan=e.support_plan,this.affected_url=e.affected_url,this.queue=e.queue,this.issue_type=e.issue_type,this.resolution_time=e.resolution_time,this.response_time=e.response_time,this.project_url=e.project_url,this.region=e.region,this.category=e.category,this.environment=e.environment,this.ticket_sharing_status=e.ticket_sharing_status,this.application_ticket_url=e.application_ticket_url,this.infrastructure_ticket_url=e.infrastructure_ticket_url,this.cloud=e.cloud,this.branch=e.branch,this.jira=e.jira,this.attachment=e.attachment,this.attachment_filename=e.attachment_filename,this.attachments=e.attachments;}static getAttachments(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}/comments/${e}/description`,{},At,{})})}static getAllAttachments(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}/comments/${e}/attachments`,"GET")})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}${De}`,{},At,e)})}static open(e){return p(this,null,function*(){let{api_url:t}=R$2();return ge(`${t}${De}`,"POST",e)})}static patch(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return ge(`${r}${De}/${e}`,"PATCH",t)})}};var br="/tickets/category",fr={},Qe=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${br}`,fr,{},e,[],[]),this.id=e.id,this.label=e.label;}static get(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${br}`,{},fr,e)})}};var vr="/tickets/priority",Pr={},Ge=class c extends _{constructor(e){let{api_url:t}=R$2();super(`${t}${vr}`,Pr,{},e,[],[]),this.id=e.id,this.label=e.label,this.short_description=e.short_description,this.description=e.description;}static get(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${vr}`,{},Pr,e)})}};var xr={},Ds="/projects/:projectId/environments/:environmentId/deployments/current/topology",Ve=class c extends _{constructor(e,t){var r,n;super(t,xr,{},e),this.id=e.id,this.name=e.name,this.constraints=(r=e.constraints)!=null?r:{},this.services=(n=e.services)!=null?n:{};}static get(e,t){return p(this,null,function*(){let u=e,{projectId:r,environmentId:n}=u,i=oe$1(u,["projectId","environmentId"]),{api_url:a}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${a}${Ds}`,{projectId:r,environmentId:n},xr,i)})}};var ae="/users/:userId/totp",Ir={},We=class c extends _{constructor(e){let{id:t}=e,{api_url:r}=R$2();super(`${r}${ae}`,Ir,{id:t},e),this._queryUrl=_.getQueryUrl(ae),this.issuer=e.issuer,this.account_name=e.account_name,this.secret=e.secret,this.qr_code=e.qr_code;}static get(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_get").call(this,`${t}${ae}`,{userId:e},Ir,{})})}static enroll(e,t,r){return p(this,null,function*(){let{api_url:n}=R$2(),i=f(`${n}${ae}`,{userId:e});return ge(i,"POST",{secret:t,passcode:r})})}static reset(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}/users/:userId/codes`,{userId:e});return ge(r,"POST")})}static delete(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=f(`${t}${ae}`,{userId:e});return ge(r,"DELETE")})}};var Ot="/vouchers",kt={},Ne=class c extends _{constructor(e){var n,i;let{uuid:t}=e,{api_url:r}=R$2();super(`${r}${Ot}`,kt,{uuid:t},e),this.currency=e.currency,this.discounted_orders=(n=e.discounted_orders)!=null?n:[],this.uuid=e.uuid,this.vouchers=(i=e.vouchers)!=null?i:[],this.vouchers_applied=e.vouchers_applied,this.vouchers_remaining_balance=e.vouchers_remaining_balance,this.vouchers_total=e.vouchers_total;}static get(e,t){return p(this,null,function*(){let a=e,{uuid:r}=a,n=oe$1(a,["uuid"]),{api_url:i}=R$2();return Xe$1(c,this,"_get").call(this,t!=null?t:`${i}${Ot}`,{uuid:r},kt,n)})}static query(e){return p(this,null,function*(){let{api_url:t}=R$2();return Xe$1(c,this,"_query").call(this,`${t}${Ot}`,{},kt,e,r=>r.vouchers)})}};var g={Account:O,Address:me,Project:H,SshKey:Ee,Subscription:K,Activity:L$1,Environment:M,Certificate:F,Comment:le,Domain:k,EnvironmentAccess:j,EnvironmentBackup:be,EnvironmentDomain:D,Metrics:N,ProjectAccess:P,ProjectLevelVariable:S,Route:R,Variable:z,Deployment:he,Organization:E,Team:Me,Region:te,Order:Y,Me:$e,AccountsProfile:ue,SetupRegistry:qe,SetupConfig:ze,AuthUser:$,Integration:q,TwoFactorAuthentication:We,ConnectedAccount:ye,PaymentSource:U,Ticket:Le,TicketPriority:Ge,TicketCategory:Qe,Voucher:Ne,Invitation:ve,OrganizationSubscription:J,EnvironmentType:fe,OrganizationMember:L,OrganizationOrder:Ae,OrganizationPaymentSource:Oe,OrganizationProfile:ke,OrganizationAddress:je,OrganizationVoucher:Q,OrganizationDiscount:B,OrganizationInvitation:Re,OrganizationRegion:we,Topology:Ve};var I=ge,wt=class{constructor(e){Ze$1(e),this.authenticationPromise=B$1(e);}getAccessToken(){return p(this,null,function*(){return this.authenticationPromise})}getConfig(){return R$2()}wipeToken(){vt$1();}reAuthenticate(){return p(this,null,function*(){return this.authenticationPromise=B$1(R$2(),true),this.authenticationPromise})}getAccountInfo(e=false){return p(this,null,function*(){return (!this.getAccountInfoPromise||e)&&(this.getAccountInfoPromise=g.Me.get(e)),this.getAccountInfoPromise})}locateProject(e){return p(this,null,function*(){return this.getProjects().then(t=>p(this,null,function*(){if(!t)return;let r=t.find(i=>i.id===e);if(r!=null&&r.endpoint)return r.endpoint;let{api_url:n}=R$2();return I(`${n}/projects/${e}`,"GET").then(i=>i.endpoint||false)}))})}getProjects(){return p(this,null,function*(){return this.getAccountInfo().then(e=>e?e.projects.map(t=>new g.Project(t,t.endpoint)):false)})}getProject(e){return p(this,null,function*(){return g.Project.get({id:e})})}getEnvironments(e){return p(this,null,function*(){return g.Environment.query({projectId:e})})}getEnvironment(e,t){return p(this,null,function*(){return g.Environment.get({projectId:e,id:t})})}getEnvironmentActivities(e,t,r,n){return p(this,null,function*(){let i=n==null?void 0:n.toISOString();return g.Activity.query({projectId:e,environmentId:t,type:r,starts_at:i})})}getEnvironmentActivity(e,t,r){return p(this,null,function*(){return g.Activity.get({projectId:e,environmentId:t,id:r})})}getCertificates(e){return p(this,null,function*(){return g.Certificate.query({projectId:e})})}addCertificate(i,a,u){return p(this,arguments,function*(e,t,r,n=[]){let{api_url:d}=R$2(),_=`${d}/projects/${e}/certificates`;return new g.Certificate({certificate:t,key:r,chain:n},_).save()})}getDomains(e,t){return p(this,null,function*(){return g.Domain.query({projectId:e,limit:t})})}getEnvironmentUsers(e,t){return p(this,null,function*(){return g.EnvironmentAccess.query({projectId:e,environmentId:t})})}getRoutes(e,t){return p(this,null,function*(){return g.Route.query({projectId:e,environmentId:t})})}getProjectUsers(e){return p(this,null,function*(){return g.ProjectAccess.query({projectId:e})})}getProjectVariables(e,t){return p(this,null,function*(){return g.ProjectLevelVariable.query({projectId:e,limit:t})})}getEnvironmentVariables(e,t,r){return p(this,null,function*(){return g.Variable.query({projectId:e,environmentId:t,limit:r})})}getEnvironmentMetrics(e,t,r){return p(this,null,function*(){return g.Metrics.get({projectId:e,environmentId:t,q:r})})}getEnvironmentBackups(e,t){return p(this,null,function*(){return g.EnvironmentBackup.query({projectId:e,environmentId:t})})}getEnvironmentDomains(e,t){return p(this,null,function*(){return g.EnvironmentDomain.query({projectId:e,environmentId:t})})}getIntegrations(e){return p(this,null,function*(){return g.Integration.query({projectId:e})})}getIntegration(e,t){return p(this,null,function*(){return g.Integration.get({projectId:e,id:t})})}getIntegrationActivities(e,t,r,n){return p(this,null,function*(){let{api_url:i}=R$2(),a=n==null?void 0:n.toISOString(),u=`${i}/projects/${e}/integrations/${t}/activities`;return g.Activity.query({type:r,starts_at:a},u)})}getSshKeys(){return p(this,null,function*(){return this.getAccountInfo().then(e=>g.SshKey.wrap(e.ssh_keys))})}getSshKey(e){return p(this,null,function*(){return g.SshKey.get({id:e})})}addSshKey(e,t){return p(this,null,function*(){let r=this.cleanRequest({value:e,title:t});return new g.SshKey(r).save()})}cleanRequest(e){let t={},r=Object.keys(e).filter(n=>e[n]!==null&&typeof e[n]!="undefined");for(let n of r)t[n]=e[n];return t}createSubscription(e){return p(this,null,function*(){let{region:t,plan:r="development",title:n,defaultBranch:i,storage:a,environments:u,optionsUrl:d,vendor:_,optionsCustom:b}=e,C=this.cleanRequest({project_region:t,plan:r,project_title:n,default_branch:i,storage:a,environments:u,options_url:d,vendor:_,options_custom:b});return new g.Subscription(C).save()})}createOrganizationSubscription(e){return p(this,null,function*(){let{organizationId:t,region:r,plan:n="development",title:i,defaultBranch:a,storage:u,environments:d,optionsUrl:_,vendor:b,optionsCustom:C}=e,re=this.cleanRequest({project_region:r,plan:n,project_title:i,default_branch:a,storage:u,environments:d,options_url:_,vendor:b,options_custom:C,organizationId:t});return new g.OrganizationSubscription(re).save()})}getSubscription(e){return p(this,null,function*(){return g.Subscription.get({id:e})})}getSubscriptions(e,t){return p(this,null,function*(){return g.Subscription.query({filter:e,all:t&&1})})}getOrganizationSubscriptions(e,t){return p(this,null,function*(){return g.OrganizationSubscription.query(I$2(g$1({},t),{organizationId:e}))})}getOrganizationSubscription(e,t){return p(this,null,function*(){return g.OrganizationSubscription.get({organizationId:e,id:t})})}getOrganizationSubscriptionCanCreate(e){return p(this,null,function*(){return g.OrganizationSubscription.getCanCreate({organizationId:e})})}getOrganizationMembers(e,t,r){return p(this,null,function*(){return g.OrganizationMember.query({organizationId:e,filter:t,sort:r})})}getOrganizationMember(e,t){return p(this,null,function*(){return g.OrganizationMember.get({organizationId:e,id:t})})}initializeEnvironment(e,t,r="master"){return p(this,null,function*(){let{api_url:n}=R$2();return I(`${n}/projects/${e}/environments/${r}/initialize`,"POST",t)})}getSubscriptionEstimate(e){return p(this,null,function*(){let{api_url:t}=R$2();return I(`${t}/subscriptions/estimate`,"GET",e)})}getOrganizationSubscriptionEstimate(e,t){return p(this,null,function*(){let{api_url:r}=R$2();return I(`${r}/organizations/${e}/subscriptions/estimate`,"GET",t)})}getCurrentDeployment(e,t,r){return p(this,null,function*(){return g.Deployment.get(g$1({projectId:e,environmentId:t},r))})}getNextDeployment(e,t,r){return p(this,null,function*(){return g.Deployment.getNext(g$1({projectId:e,environmentId:t},r))})}getDeployments(e,t){return p(this,null,function*(){return g.Deployment.getDeployments({projectId:e,environmentId:t})})}runRuntimeOperationDeployment(e){return p(this,null,function*(){return g.Deployment.run(e)})}getOrganizations(e){return p(this,null,function*(){return g.Organization.query(e)})}getOrganization(e){return p(this,null,function*(){return g.Organization.get({id:e})})}createOrganization(e){return p(this,null,function*(){return new g.Organization(e).save()})}createTeam(e){return p(this,null,function*(){return new g.Team(e).save()})}getTeams(){return p(this,null,function*(){return this.getAccountInfo().then(e=>{if(e)return e.teams.map(t=>new g.Team(t))})})}getTeam(e){return p(this,null,function*(){return g.Team.get({id:e})})}getRegions(){return p(this,null,function*(){return g.Region.query({})})}getOrganizationRegions(e,t){return p(this,null,function*(){return g.OrganizationRegion.query(g$1({organizationId:e},t))})}getAccount(e){return p(this,null,function*(){return g.Account.get({id:e})})}getAddress(e){return p(this,null,function*(){return g.Address.get({id:e})})}getOrganizationAddress(e){return p(this,null,function*(){return g.OrganizationAddress.query({organizationId:e})})}getOrders(e){return p(this,null,function*(){return g.Order.query({filter:{owner:e}})})}getOrder(e){return p(this,null,function*(){return g.Order.get({id:e})})}getOrganizationOrders(e,t){return p(this,null,function*(){return g.OrganizationOrder.query({organizationId:e,filter:t})})}getOrganizationOrder(e,t,r,n){return p(this,null,function*(){return g.OrganizationOrder.get({organizationId:e,id:t,includeDetails:r,asof:n})})}getVouchers(e){return p(this,null,function*(){return g.Voucher.get({uuid:e})})}getOrganizationVouchers(e){return p(this,null,function*(){return g.OrganizationVoucher.get({organizationId:e})})}addOrganizationVoucher(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=this.cleanRequest({code:t});return new g.OrganizationVoucher(g$1({organizationId:e},n),`${r}/organizations/${e}/vouchers/apply`).save()})}getOrganizationDiscounts(e){return p(this,null,function*(){return g.OrganizationDiscount.get({organizationId:e})})}getCardOnFile(){return p(this,null,function*(){let{api_url:e}=R$2();return I(`${e}/cardonfile`,"GET")})}getPaymentSource(e){return p(this,null,function*(){return g.PaymentSource.get({owner:e})})}getOrganizationPaymentSource(e,t){return p(this,null,function*(){return g.OrganizationPaymentSource.get({organizationId:e,include_nonchargeable:t!=null?t:0})})}addPaymentSource(e,t,r){return p(this,null,function*(){let n=this.cleanRequest({type:e,token:t,email:r});return new g.PaymentSource(n).save()})}addOrganizationPaymentSource(e,t,r,n,i){return p(this,null,function*(){let a=this.cleanRequest({type:t,token:r,email:n,chargeable:i!=null?i:true});return new g.OrganizationPaymentSource(g$1({organizationId:e},a)).save()})}deletePaymentSource(e){return p(this,null,function*(){return g.PaymentSource.delete(e)})}deleteOrganizationPaymentSource(){return p(this,null,function*(){return g.OrganizationPaymentSource.delete()})}getPaymentSourcesAllowed(){return p(this,null,function*(){return g.PaymentSource.getAllowed()})}getOrganizationPaymentSourcesAllowed(e){return p(this,null,function*(){return g.OrganizationPaymentSource.getAllowed(e)})}createPaymentSourceIntent(){return p(this,null,function*(){return g.PaymentSource.intent()})}createOrganizationPaymentSourceIntent(e){return p(this,null,function*(){return g.OrganizationPaymentSource.intent(e)})}getUserProfile(e){return p(this,null,function*(){return g.AccountsProfile.get({id:e})})}getOrganizationProfile(e){return p(this,null,function*(){return g.OrganizationProfile.get({organizationId:e})})}getStreamingLog(e,t=0){return p(this,null,function*(){let r=yield this.getAccessToken(),n=`${e.getLink("log")}?max_items=${t}&max_delay=1000`;return fetch(n,{method:"GET",headers:{Authorization:`Bearer ${r.access_token}`}})})}updateUserProfile(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=yield I(`${r}/profiles/${e}`,"PATCH",t);return new g.AccountsProfile(n)})}updateOrganizationProfile(e,t){return p(this,null,function*(){let{api_url:r}=R$2(),n=yield I(`${r}/organizations/${e}/profile`,"PATCH",t);return new g.OrganizationProfile(n)})}getSetupRegistry(){return p(this,null,function*(){let{api_url:e}=R$2();return I(`${e}/setup/registry`,"POST").then(t=>typeof t=="undefined"?void 0:Object.entries(t).reduce((r,[n,i])=>(r[n]=new g.SetupRegistry(i),r),{}))})}getSetupRegistryItem(e){return p(this,null,function*(){return g.SetupRegistry.get({name:e})})}getSetupConfig(e){return p(this,null,function*(){return g.SetupConfig.get(e)})}getUser(e){return p(this,null,function*(){return g.AuthUser.get({id:e})})}getUserIdFromUsername(e){return p(this,null,function*(){let{api_url:t}=R$2(),r=yield I(`${t}/profiles?filter[username]=${e}`);return new g.AccountsProfile(r.profiles[0])})}getProjectActivities(e,t,r){return p(this,null,function*(){let n={type:t,starts_at:r,projectId:e},{api_url:i}=R$2();return g.Activity.query(n,`${i}/projects/:projectId/activities`)})}getProjectActivity(e,t){return p(this,null,function*(){let r={id:t,projectId:e},{api_url:n}=R$2();return g.Activity.get(r,`${n}/projects/:projectId/activities`)})}getTFA(e){return p(this,null,function*(){return g.TwoFactorAuthentication.get(e)})}enrollTFA(e,t,r){return p(this,null,function*(){return g.TwoFactorAuthentication.enroll(e,t,r)})}disableTFA(e){return p(this,null,function*(){return g.TwoFactorAuthentication.delete(e)})}resetRecoveryCodes(e){return p(this,null,function*(){return g.TwoFactorAuthentication.reset(e)})}getConnectedAccounts(e){return p(this,null,function*(){return g.ConnectedAccount.query(e)})}getTickets(e){return p(this,null,function*(){return g.Ticket.query(e)})}updateTicketStatus(e,t){return p(this,null,function*(){return g.Ticket.patch(e,{status:t}).then(r=>r)})}getTicketPriorities(e,t){return p(this,null,function*(){return (yield g.TicketPriority.get({subscription_id:e,category:t})).map(n=>new g.TicketPriority(n))})}getTicketCategories(){return p(this,null,function*(){return (yield g.TicketCategory.get()).map(t=>new g.TicketCategory(t))})}getTicketAttachments(e){return p(this,null,function*(){let t=yield g.Ticket.getAttachments(e),{attachments:r}=t;return Object.entries(r||{}).map(([n,i])=>({filename:n,url:i.uri,contentType:i.content_type}))})}getAllTicketAttachments(e){return p(this,null,function*(){return (yield g.Ticket.getAllAttachments(e)).map(r=>({filename:r.filename,url:r.uri,contentType:r.content_type}))})}openTicket(e){return p(this,null,function*(){return yield g.Ticket.open(e)})}loadComments(e,t){return p(this,null,function*(){var _;let r=yield g.Comment.query(e,t),n=t.page||1,i=50,a=Math.ceil(r.count/i),u=n===a-1,d=n===a;return u&&r.count%i===1&&((_=r._links)==null||delete _.next),r.count-=1,d&&(r.comments=r.comments.slice(0,-1)),I$2(g$1({},r),{comments:r.comments.map(b=>I$2(g$1({},b),{attachments:Object.values(b.attachments||{}).map(C=>({filename:C.file_name,url:C.uri,contentType:C.content_type}))}))})})}sendComment(e){return p(this,null,function*(){return new g.Comment(e).save()})}updateProfilePicture(e,t){return p(this,null,function*(){return g.AccountsProfile.updateProfilePicture(e,t)})}deleteProfilePicture(e){return p(this,null,function*(){return g.AccountsProfile.deleteProfilePicture(e)})}createInvitation(e,t,r,n,i=false){return p(this,null,function*(){return new g.Invitation({email:e,projectId:t,environments:n,role:r,force:i}).save()})}createOrganizationInvitation(e,t,r,n=false){return p(this,null,function*(){return new g.OrganizationInvitation({email:e,organizationId:t,permissions:r,force:n}).save()})}getOrganizationInvitations(e,t){return p(this,null,function*(){return g.OrganizationInvitation.getList(e,t)})}createInvitationWithEnvironmentTypes(e,t,r,n,i=false){return p(this,null,function*(){return new g.Invitation({email:e,projectId:t,permissions:n,role:r,force:i}).save()})}getInvitations(e){return p(this,null,function*(){return g.Invitation.query(e)})}getProjectEnvironmentTypes(e){return p(this,null,function*(){return g.EnvironmentType.query({projectId:e})})}getProjectEnvironmentType(e,t){return p(this,null,function*(){return g.EnvironmentType.get({projectId:e,id:t})})}getProjectEnvironmentTypesWithAccesses(e){return p(this,null,function*(){let t=yield this.getProjectEnvironmentTypes(e);for(let r of t)yield r.getAccesses();return t})}updateEnvironmentTypeAccess(e){return p(this,null,function*(){return g.EnvironmentType.updateAccess(e)})}deleteEnvironmentTypeAccess(e){return p(this,null,function*(){return g.EnvironmentType.deleteAccess(e)})}createEnvironmentTypeAccess(e){return p(this,null,function*(){return g.EnvironmentType.createAccess(e)})}getTopology(e,t,r){return p(this,null,function*(){return g.Topology.get(g$1({projectId:e,environmentId:t},r))})}getDunningActions(e){return p(this,null,function*(){let{api_url:t}=R$2();return I(`${t}/organizations/${e}/dunning-actions`)})}setVerificationMethodAsPaymentMethod(e){return p(this,null,function*(){return g.OrganizationPaymentSource.setVerificationMethodAsPaymentMethod(e)})}};
 
 const __filename$1 = fileURLToPath(import.meta.url);
 const __dirname$1 = dirname(__filename$1);
@@ -29017,6 +29258,771 @@ function requireContext () {
 var utils$1 = {};
 
 var utils = {};
+
+var lib = {};
+
+var proxy = {};
+
+var hasRequiredProxy;
+
+function requireProxy () {
+	if (hasRequiredProxy) return proxy;
+	hasRequiredProxy = 1;
+	Object.defineProperty(proxy, "__esModule", { value: true });
+	proxy.checkBypass = proxy.getProxyUrl = void 0;
+	function getProxyUrl(reqUrl) {
+	    const usingSsl = reqUrl.protocol === 'https:';
+	    if (checkBypass(reqUrl)) {
+	        return undefined;
+	    }
+	    const proxyVar = (() => {
+	        if (usingSsl) {
+	            return process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+	        }
+	        else {
+	            return process.env['http_proxy'] || process.env['HTTP_PROXY'];
+	        }
+	    })();
+	    if (proxyVar) {
+	        try {
+	            return new DecodedURL(proxyVar);
+	        }
+	        catch (_a) {
+	            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+	                return new DecodedURL(`http://${proxyVar}`);
+	        }
+	    }
+	    else {
+	        return undefined;
+	    }
+	}
+	proxy.getProxyUrl = getProxyUrl;
+	function checkBypass(reqUrl) {
+	    if (!reqUrl.hostname) {
+	        return false;
+	    }
+	    const reqHost = reqUrl.hostname;
+	    if (isLoopbackAddress(reqHost)) {
+	        return true;
+	    }
+	    const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+	    if (!noProxy) {
+	        return false;
+	    }
+	    // Determine the request port
+	    let reqPort;
+	    if (reqUrl.port) {
+	        reqPort = Number(reqUrl.port);
+	    }
+	    else if (reqUrl.protocol === 'http:') {
+	        reqPort = 80;
+	    }
+	    else if (reqUrl.protocol === 'https:') {
+	        reqPort = 443;
+	    }
+	    // Format the request hostname and hostname with port
+	    const upperReqHosts = [reqUrl.hostname.toUpperCase()];
+	    if (typeof reqPort === 'number') {
+	        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+	    }
+	    // Compare request host against noproxy
+	    for (const upperNoProxyItem of noProxy
+	        .split(',')
+	        .map(x => x.trim().toUpperCase())
+	        .filter(x => x)) {
+	        if (upperNoProxyItem === '*' ||
+	            upperReqHosts.some(x => x === upperNoProxyItem ||
+	                x.endsWith(`.${upperNoProxyItem}`) ||
+	                (upperNoProxyItem.startsWith('.') &&
+	                    x.endsWith(`${upperNoProxyItem}`)))) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
+	proxy.checkBypass = checkBypass;
+	function isLoopbackAddress(host) {
+	    const hostLower = host.toLowerCase();
+	    return (hostLower === 'localhost' ||
+	        hostLower.startsWith('127.') ||
+	        hostLower.startsWith('[::1]') ||
+	        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+	}
+	class DecodedURL extends URL {
+	    constructor(url, base) {
+	        super(url, base);
+	        this._decodedUsername = decodeURIComponent(super.username);
+	        this._decodedPassword = decodeURIComponent(super.password);
+	    }
+	    get username() {
+	        return this._decodedUsername;
+	    }
+	    get password() {
+	        return this._decodedPassword;
+	    }
+	}
+	
+	return proxy;
+}
+
+var hasRequiredLib;
+
+function requireLib () {
+	if (hasRequiredLib) return lib;
+	hasRequiredLib = 1;
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	var __createBinding = (lib && lib.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    var desc = Object.getOwnPropertyDescriptor(m, k);
+	    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+	      desc = { enumerable: true, get: function() { return m[k]; } };
+	    }
+	    Object.defineProperty(o, k2, desc);
+	}) : (function(o, m, k, k2) {
+	    if (k2 === undefined) k2 = k;
+	    o[k2] = m[k];
+	}));
+	var __setModuleDefault = (lib && lib.__setModuleDefault) || (Object.create ? (function(o, v) {
+	    Object.defineProperty(o, "default", { enumerable: true, value: v });
+	}) : function(o, v) {
+	    o["default"] = v;
+	});
+	var __importStar = (lib && lib.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+	    __setModuleDefault(result, mod);
+	    return result;
+	};
+	var __awaiter = (lib && lib.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	Object.defineProperty(lib, "__esModule", { value: true });
+	lib.HttpClient = lib.isHttps = lib.HttpClientResponse = lib.HttpClientError = lib.getProxyUrl = lib.MediaTypes = lib.Headers = lib.HttpCodes = void 0;
+	const http = __importStar(require$$2$1);
+	const https = __importStar(require$$1$1);
+	const pm = __importStar(requireProxy());
+	const tunnel = __importStar(requireTunnel());
+	const undici_1 = requireUndici();
+	var HttpCodes;
+	(function (HttpCodes) {
+	    HttpCodes[HttpCodes["OK"] = 200] = "OK";
+	    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
+	    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
+	    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
+	    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
+	    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
+	    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
+	    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
+	    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+	    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
+	    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
+	    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
+	    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
+	    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
+	    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
+	    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+	    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
+	    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+	    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
+	    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
+	    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
+	    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
+	    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
+	    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
+	    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
+	    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+	    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
+	})(HttpCodes || (lib.HttpCodes = HttpCodes = {}));
+	var Headers;
+	(function (Headers) {
+	    Headers["Accept"] = "accept";
+	    Headers["ContentType"] = "content-type";
+	})(Headers || (lib.Headers = Headers = {}));
+	var MediaTypes;
+	(function (MediaTypes) {
+	    MediaTypes["ApplicationJson"] = "application/json";
+	})(MediaTypes || (lib.MediaTypes = MediaTypes = {}));
+	/**
+	 * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
+	 * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	 */
+	function getProxyUrl(serverUrl) {
+	    const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+	    return proxyUrl ? proxyUrl.href : '';
+	}
+	lib.getProxyUrl = getProxyUrl;
+	const HttpRedirectCodes = [
+	    HttpCodes.MovedPermanently,
+	    HttpCodes.ResourceMoved,
+	    HttpCodes.SeeOther,
+	    HttpCodes.TemporaryRedirect,
+	    HttpCodes.PermanentRedirect
+	];
+	const HttpResponseRetryCodes = [
+	    HttpCodes.BadGateway,
+	    HttpCodes.ServiceUnavailable,
+	    HttpCodes.GatewayTimeout
+	];
+	const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+	const ExponentialBackoffCeiling = 10;
+	const ExponentialBackoffTimeSlice = 5;
+	class HttpClientError extends Error {
+	    constructor(message, statusCode) {
+	        super(message);
+	        this.name = 'HttpClientError';
+	        this.statusCode = statusCode;
+	        Object.setPrototypeOf(this, HttpClientError.prototype);
+	    }
+	}
+	lib.HttpClientError = HttpClientError;
+	class HttpClientResponse {
+	    constructor(message) {
+	        this.message = message;
+	    }
+	    readBody() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+	                let output = Buffer.alloc(0);
+	                this.message.on('data', (chunk) => {
+	                    output = Buffer.concat([output, chunk]);
+	                });
+	                this.message.on('end', () => {
+	                    resolve(output.toString());
+	                });
+	            }));
+	        });
+	    }
+	    readBodyBuffer() {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+	                const chunks = [];
+	                this.message.on('data', (chunk) => {
+	                    chunks.push(chunk);
+	                });
+	                this.message.on('end', () => {
+	                    resolve(Buffer.concat(chunks));
+	                });
+	            }));
+	        });
+	    }
+	}
+	lib.HttpClientResponse = HttpClientResponse;
+	function isHttps(requestUrl) {
+	    const parsedUrl = new URL(requestUrl);
+	    return parsedUrl.protocol === 'https:';
+	}
+	lib.isHttps = isHttps;
+	class HttpClient {
+	    constructor(userAgent, handlers, requestOptions) {
+	        this._ignoreSslError = false;
+	        this._allowRedirects = true;
+	        this._allowRedirectDowngrade = false;
+	        this._maxRedirects = 50;
+	        this._allowRetries = false;
+	        this._maxRetries = 1;
+	        this._keepAlive = false;
+	        this._disposed = false;
+	        this.userAgent = userAgent;
+	        this.handlers = handlers || [];
+	        this.requestOptions = requestOptions;
+	        if (requestOptions) {
+	            if (requestOptions.ignoreSslError != null) {
+	                this._ignoreSslError = requestOptions.ignoreSslError;
+	            }
+	            this._socketTimeout = requestOptions.socketTimeout;
+	            if (requestOptions.allowRedirects != null) {
+	                this._allowRedirects = requestOptions.allowRedirects;
+	            }
+	            if (requestOptions.allowRedirectDowngrade != null) {
+	                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+	            }
+	            if (requestOptions.maxRedirects != null) {
+	                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+	            }
+	            if (requestOptions.keepAlive != null) {
+	                this._keepAlive = requestOptions.keepAlive;
+	            }
+	            if (requestOptions.allowRetries != null) {
+	                this._allowRetries = requestOptions.allowRetries;
+	            }
+	            if (requestOptions.maxRetries != null) {
+	                this._maxRetries = requestOptions.maxRetries;
+	            }
+	        }
+	    }
+	    options(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    get(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('GET', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    del(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    post(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('POST', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    patch(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    put(requestUrl, data, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('PUT', requestUrl, data, additionalHeaders || {});
+	        });
+	    }
+	    head(requestUrl, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+	        });
+	    }
+	    sendStream(verb, requestUrl, stream, additionalHeaders) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return this.request(verb, requestUrl, stream, additionalHeaders);
+	        });
+	    }
+	    /**
+	     * Gets a typed object from an endpoint
+	     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+	     */
+	    getJson(requestUrl, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            const res = yield this.get(requestUrl, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    postJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.post(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    putJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.put(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    patchJson(requestUrl, obj, additionalHeaders = {}) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            const data = JSON.stringify(obj, null, 2);
+	            additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+	            additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+	            const res = yield this.patch(requestUrl, data, additionalHeaders);
+	            return this._processResponse(res, this.requestOptions);
+	        });
+	    }
+	    /**
+	     * Makes a raw http request.
+	     * All other methods such as get, post, patch, and request ultimately call this.
+	     * Prefer get, del, post and patch
+	     */
+	    request(verb, requestUrl, data, headers) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            if (this._disposed) {
+	                throw new Error('Client has already been disposed.');
+	            }
+	            const parsedUrl = new URL(requestUrl);
+	            let info = this._prepareRequest(verb, parsedUrl, headers);
+	            // Only perform retries on reads since writes may not be idempotent.
+	            const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb)
+	                ? this._maxRetries + 1
+	                : 1;
+	            let numTries = 0;
+	            let response;
+	            do {
+	                response = yield this.requestRaw(info, data);
+	                // Check if it's an authentication challenge
+	                if (response &&
+	                    response.message &&
+	                    response.message.statusCode === HttpCodes.Unauthorized) {
+	                    let authenticationHandler;
+	                    for (const handler of this.handlers) {
+	                        if (handler.canHandleAuthentication(response)) {
+	                            authenticationHandler = handler;
+	                            break;
+	                        }
+	                    }
+	                    if (authenticationHandler) {
+	                        return authenticationHandler.handleAuthentication(this, info, data);
+	                    }
+	                    else {
+	                        // We have received an unauthorized response but have no handlers to handle it.
+	                        // Let the response return to the caller.
+	                        return response;
+	                    }
+	                }
+	                let redirectsRemaining = this._maxRedirects;
+	                while (response.message.statusCode &&
+	                    HttpRedirectCodes.includes(response.message.statusCode) &&
+	                    this._allowRedirects &&
+	                    redirectsRemaining > 0) {
+	                    const redirectUrl = response.message.headers['location'];
+	                    if (!redirectUrl) {
+	                        // if there's no location to redirect to, we won't
+	                        break;
+	                    }
+	                    const parsedRedirectUrl = new URL(redirectUrl);
+	                    if (parsedUrl.protocol === 'https:' &&
+	                        parsedUrl.protocol !== parsedRedirectUrl.protocol &&
+	                        !this._allowRedirectDowngrade) {
+	                        throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+	                    }
+	                    // we need to finish reading the response before reassigning response
+	                    // which will leak the open socket.
+	                    yield response.readBody();
+	                    // strip authorization header if redirected to a different hostname
+	                    if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+	                        for (const header in headers) {
+	                            // header names are case insensitive
+	                            if (header.toLowerCase() === 'authorization') {
+	                                delete headers[header];
+	                            }
+	                        }
+	                    }
+	                    // let's make the request with the new redirectUrl
+	                    info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+	                    response = yield this.requestRaw(info, data);
+	                    redirectsRemaining--;
+	                }
+	                if (!response.message.statusCode ||
+	                    !HttpResponseRetryCodes.includes(response.message.statusCode)) {
+	                    // If not a retry code, return immediately instead of retrying
+	                    return response;
+	                }
+	                numTries += 1;
+	                if (numTries < maxTries) {
+	                    yield response.readBody();
+	                    yield this._performExponentialBackoff(numTries);
+	                }
+	            } while (numTries < maxTries);
+	            return response;
+	        });
+	    }
+	    /**
+	     * Needs to be called if keepAlive is set to true in request options.
+	     */
+	    dispose() {
+	        if (this._agent) {
+	            this._agent.destroy();
+	        }
+	        this._disposed = true;
+	    }
+	    /**
+	     * Raw request.
+	     * @param info
+	     * @param data
+	     */
+	    requestRaw(info, data) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => {
+	                function callbackForResult(err, res) {
+	                    if (err) {
+	                        reject(err);
+	                    }
+	                    else if (!res) {
+	                        // If `err` is not passed, then `res` must be passed.
+	                        reject(new Error('Unknown error'));
+	                    }
+	                    else {
+	                        resolve(res);
+	                    }
+	                }
+	                this.requestRawWithCallback(info, data, callbackForResult);
+	            });
+	        });
+	    }
+	    /**
+	     * Raw request with callback.
+	     * @param info
+	     * @param data
+	     * @param onResult
+	     */
+	    requestRawWithCallback(info, data, onResult) {
+	        if (typeof data === 'string') {
+	            if (!info.options.headers) {
+	                info.options.headers = {};
+	            }
+	            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+	        }
+	        let callbackCalled = false;
+	        function handleResult(err, res) {
+	            if (!callbackCalled) {
+	                callbackCalled = true;
+	                onResult(err, res);
+	            }
+	        }
+	        const req = info.httpModule.request(info.options, (msg) => {
+	            const res = new HttpClientResponse(msg);
+	            handleResult(undefined, res);
+	        });
+	        let socket;
+	        req.on('socket', sock => {
+	            socket = sock;
+	        });
+	        // If we ever get disconnected, we want the socket to timeout eventually
+	        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+	            if (socket) {
+	                socket.end();
+	            }
+	            handleResult(new Error(`Request timeout: ${info.options.path}`));
+	        });
+	        req.on('error', function (err) {
+	            // err has statusCode property
+	            // res should have headers
+	            handleResult(err);
+	        });
+	        if (data && typeof data === 'string') {
+	            req.write(data, 'utf8');
+	        }
+	        if (data && typeof data !== 'string') {
+	            data.on('close', function () {
+	                req.end();
+	            });
+	            data.pipe(req);
+	        }
+	        else {
+	            req.end();
+	        }
+	    }
+	    /**
+	     * Gets an http agent. This function is useful when you need an http agent that handles
+	     * routing through a proxy server - depending upon the url and proxy environment variables.
+	     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+	     */
+	    getAgent(serverUrl) {
+	        const parsedUrl = new URL(serverUrl);
+	        return this._getAgent(parsedUrl);
+	    }
+	    getAgentDispatcher(serverUrl) {
+	        const parsedUrl = new URL(serverUrl);
+	        const proxyUrl = pm.getProxyUrl(parsedUrl);
+	        const useProxy = proxyUrl && proxyUrl.hostname;
+	        if (!useProxy) {
+	            return;
+	        }
+	        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
+	    }
+	    _prepareRequest(method, requestUrl, headers) {
+	        const info = {};
+	        info.parsedUrl = requestUrl;
+	        const usingSsl = info.parsedUrl.protocol === 'https:';
+	        info.httpModule = usingSsl ? https : http;
+	        const defaultPort = usingSsl ? 443 : 80;
+	        info.options = {};
+	        info.options.host = info.parsedUrl.hostname;
+	        info.options.port = info.parsedUrl.port
+	            ? parseInt(info.parsedUrl.port)
+	            : defaultPort;
+	        info.options.path =
+	            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+	        info.options.method = method;
+	        info.options.headers = this._mergeHeaders(headers);
+	        if (this.userAgent != null) {
+	            info.options.headers['user-agent'] = this.userAgent;
+	        }
+	        info.options.agent = this._getAgent(info.parsedUrl);
+	        // gives handlers an opportunity to participate
+	        if (this.handlers) {
+	            for (const handler of this.handlers) {
+	                handler.prepareRequest(info.options);
+	            }
+	        }
+	        return info;
+	    }
+	    _mergeHeaders(headers) {
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers || {}));
+	        }
+	        return lowercaseKeys(headers || {});
+	    }
+	    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+	        let clientHeader;
+	        if (this.requestOptions && this.requestOptions.headers) {
+	            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
+	        }
+	        return additionalHeaders[header] || clientHeader || _default;
+	    }
+	    _getAgent(parsedUrl) {
+	        let agent;
+	        const proxyUrl = pm.getProxyUrl(parsedUrl);
+	        const useProxy = proxyUrl && proxyUrl.hostname;
+	        if (this._keepAlive && useProxy) {
+	            agent = this._proxyAgent;
+	        }
+	        if (!useProxy) {
+	            agent = this._agent;
+	        }
+	        // if agent is already assigned use that agent.
+	        if (agent) {
+	            return agent;
+	        }
+	        const usingSsl = parsedUrl.protocol === 'https:';
+	        let maxSockets = 100;
+	        if (this.requestOptions) {
+	            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+	        }
+	        // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
+	        if (proxyUrl && proxyUrl.hostname) {
+	            const agentOptions = {
+	                maxSockets,
+	                keepAlive: this._keepAlive,
+	                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
+	                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+	                })), { host: proxyUrl.hostname, port: proxyUrl.port })
+	            };
+	            let tunnelAgent;
+	            const overHttps = proxyUrl.protocol === 'https:';
+	            if (usingSsl) {
+	                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+	            }
+	            else {
+	                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+	            }
+	            agent = tunnelAgent(agentOptions);
+	            this._proxyAgent = agent;
+	        }
+	        // if tunneling agent isn't assigned create a new agent
+	        if (!agent) {
+	            const options = { keepAlive: this._keepAlive, maxSockets };
+	            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+	            this._agent = agent;
+	        }
+	        if (usingSsl && this._ignoreSslError) {
+	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+	            // we have to cast it to any and change it directly
+	            agent.options = Object.assign(agent.options || {}, {
+	                rejectUnauthorized: false
+	            });
+	        }
+	        return agent;
+	    }
+	    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
+	        let proxyAgent;
+	        if (this._keepAlive) {
+	            proxyAgent = this._proxyAgentDispatcher;
+	        }
+	        // if agent is already assigned use that agent.
+	        if (proxyAgent) {
+	            return proxyAgent;
+	        }
+	        const usingSsl = parsedUrl.protocol === 'https:';
+	        proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
+	            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
+	        })));
+	        this._proxyAgentDispatcher = proxyAgent;
+	        if (usingSsl && this._ignoreSslError) {
+	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+	            // we have to cast it to any and change it directly
+	            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
+	                rejectUnauthorized: false
+	            });
+	        }
+	        return proxyAgent;
+	    }
+	    _performExponentialBackoff(retryNumber) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+	            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+	            return new Promise(resolve => setTimeout(() => resolve(), ms));
+	        });
+	    }
+	    _processResponse(res, options) {
+	        return __awaiter(this, void 0, void 0, function* () {
+	            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+	                const statusCode = res.message.statusCode || 0;
+	                const response = {
+	                    statusCode,
+	                    result: null,
+	                    headers: {}
+	                };
+	                // not found leads to null obj returned
+	                if (statusCode === HttpCodes.NotFound) {
+	                    resolve(response);
+	                }
+	                // get the result from the body
+	                function dateTimeDeserializer(key, value) {
+	                    if (typeof value === 'string') {
+	                        const a = new Date(value);
+	                        if (!isNaN(a.valueOf())) {
+	                            return a;
+	                        }
+	                    }
+	                    return value;
+	                }
+	                let obj;
+	                let contents;
+	                try {
+	                    contents = yield res.readBody();
+	                    if (contents && contents.length > 0) {
+	                        if (options && options.deserializeDates) {
+	                            obj = JSON.parse(contents, dateTimeDeserializer);
+	                        }
+	                        else {
+	                            obj = JSON.parse(contents);
+	                        }
+	                        response.result = obj;
+	                    }
+	                    response.headers = res.message.headers;
+	                }
+	                catch (err) {
+	                    // Invalid resource (contents not json);  leaving result obj null
+	                }
+	                // note that 3xx redirects are handled by the http layer.
+	                if (statusCode > 299) {
+	                    let msg;
+	                    // if exception/error in body, attempt to get better error
+	                    if (obj && obj.message) {
+	                        msg = obj.message;
+	                    }
+	                    else if (contents && contents.length > 0) {
+	                        // it may be the case that the exception is in the body message as string
+	                        msg = contents;
+	                    }
+	                    else {
+	                        msg = `Failed request: (${statusCode})`;
+	                    }
+	                    const err = new HttpClientError(msg, statusCode);
+	                    err.result = response.result;
+	                    reject(err);
+	                }
+	                else {
+	                    resolve(response);
+	                }
+	            }));
+	        });
+	    }
+	}
+	lib.HttpClient = HttpClient;
+	const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+	
+	return lib;
+}
 
 var hasRequiredUtils$1;
 

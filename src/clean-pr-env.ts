@@ -19,7 +19,7 @@ export async function cleanPrEnv(): Promise<void> {
 
   // Get env details
   const prRef = `${prNumber}/merge`
-  let envResult
+  let envResult: Awaited<ReturnType<typeof client.getEnvironment>> | undefined
   try {
     envResult = await client.getEnvironment(
       core.getInput('project-id'),

@@ -26,8 +26,8 @@ updates:
           - patch
       npm-linters:
         patterns:
-          - '*eslint*'
-          - '*prettier*'
+          - '@biomejs/*'
+          - 'biome'
           - '*stylelint*'
       npm-rollup:
         patterns:

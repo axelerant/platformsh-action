@@ -1,10 +1,11 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
   "files": {
-    "ignore": [
-      "coverage/**",
-      "dist/**",
-      "node_modules/**"
+    "includes": [
+      "**",
+      "!coverage/**",
+      "!dist/**",
+      "!node_modules/**"
     ]
   },
   "formatter": {

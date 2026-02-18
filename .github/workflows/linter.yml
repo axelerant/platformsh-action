@@ -48,27 +48,25 @@ jobs:
 
       - name: Lint Codebase
         id: super-linter
-        uses: super-linter/super-linter/slim@v7
+        uses: super-linter/super-linter/slim@v8
         env:
-          CHECKOV_CONFIG: .checkov.yml
+          CHECKOV_FILE_NAME: .checkov.yml
           DEFAULT_BRANCH: main
           FILTER_REGEX_EXCLUDE: dist/**/*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LINTER_RULES_PATH: ${{ github.workspace }}
+          LINTER_RULES_PATH: .
           VALIDATE_ALL_CODEBASE: true
-          VALIDATE_JAVASCRIPT_ES: false
-          VALIDATE_JAVASCRIPT_STANDARD: false
-          VALIDATE_JSCPD: false
-          VALIDATE_TYPESCRIPT_ES: false
-          VALIDATE_JSON: false
-          VALIDATE_TYPESCRIPT_STANDARD: false
-          VALIDATE_MARKDOWN_PRETTIER: false
-          VALIDATE_JAVASCRIPT_PRETTIER: false
-          VALIDATE_JSON_PRETTIER: false
-          VALIDATE_TYPESCRIPT_PRETTIER: false
-          VALIDATE_YAML_PRETTIER: false
-          VALIDATE_PRETTIER: false
-          FIX_YAML_PRETTIER: false
+          # Explicitly enable other desired linters (matching previous run behavior)
+          VALIDATE_BASH: true
+          VALIDATE_CHECKOV: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITLEAKS: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_NATURAL_LANGUAGE: true
+          VALIDATE_PRE_COMMIT: true
+          VALIDATE_SPELL_CODESPELL: true
+          VALIDATE_TRIVY: true
+          VALIDATE_YAML: true
 
       - name: Show differences
         run: |

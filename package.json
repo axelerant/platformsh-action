@@ -26,7 +26,7 @@
     "ci-test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 jest",
     "coverage": "make-coverage-badge --output-path ./badges/coverage.svg",
     "format:write": "biome format --write src",
-    "format:check": "biome format --check src",
+    "format:check": "biome format src",
     "lint": "biome lint src",
     "local-action": "local-action . src/main.ts .env",
     "package": "npm run copy-extra && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",

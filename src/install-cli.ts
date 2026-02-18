@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { exec, ExecOptions } from '@actions/exec'
+import { exec, type ExecOptions } from '@actions/exec'
 import { getAppRootPath } from './utils.js'
 
 export async function installCli(): Promise<void> {

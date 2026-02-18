@@ -56,9 +56,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: .
           VALIDATE_ALL_CODEBASE: true
-          # Explicitly enable Biome
-          VALIDATE_BIOME_FORMAT: true
-          VALIDATE_BIOME_LINT: true
+          # We use Biome for linting, so we don't need to validate it with Super-linter
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
           # Explicitly enable other desired linters (matching previous run behavior)
           VALIDATE_BASH: true
           VALIDATE_CHECKOV: true

@@ -3,7 +3,7 @@ import os__default, { EOL } from 'os';
 import * as crypto$1 from 'crypto';
 import * as fs$1 from 'fs';
 import fs__default, { promises, existsSync, readFileSync } from 'fs';
-import path, { dirname } from 'path';
+import path from 'path';
 import http from 'http';
 import https from 'https';
 import 'net';
@@ -25,14 +25,14 @@ import require$$1$2 from 'node:zlib';
 import require$$5$1 from 'node:perf_hooks';
 import require$$8$1 from 'node:util/types';
 import require$$1$1 from 'node:worker_threads';
-import require$$1$3 from 'node:url';
+import require$$1$3, { fileURLToPath } from 'node:url';
 import require$$5$2 from 'node:async_hooks';
 import require$$1$4 from 'node:console';
 import require$$1$5 from 'node:dns';
 import require$$5$3 from 'string_decoder';
 import child from 'child_process';
 import require$$6$1 from 'timers';
-import { fileURLToPath } from 'url';
+import { dirname } from 'node:path';
 
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */

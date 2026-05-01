@@ -138,6 +138,34 @@ describe('cleanPrEnv', () => {
     expect(core.endGroup).toHaveBeenCalled()
   })
 
+  it('should use the environment-name input when provided', async () => {
+    const mockEnvResult = getTestEnvironment('active', 'pr-123')
+    getEnvironmentMock.mockResolvedValue(mockEnvResult)
+    github.context.payload.pull_request = { number: 123 }
+    core.getInput.mockImplementation(name => {
+      switch (name) {
+        case 'project-id':
+          return 'project-id'
+        case 'cli-token':
+          return 'cli-token'
+        case 'environment-name':
+          return 'pr-123'
+        default:
+          return ''
+      }
+    })
+
+    await cleanPrEnv()
+
+    expect(getEnvironmentMock).toHaveBeenCalledWith('project-id', 'pr-123')
+    expect(mockEnvResult.deactivate).toHaveBeenCalled()
+    expect(mockEnvResult.delete).toHaveBeenCalled()
+    expect(core.info).toHaveBeenCalledWith(
+      `pr-123 environment deleted successfully.`
+    )
+    expect(core.endGroup).toHaveBeenCalled()
+  })
+
   it('should handle error during getEnvironment call', async () => {
     const errorMessage = 'Failed to get environment details'
     getEnvironmentMock.mockRejectedValue(new Error(errorMessage))

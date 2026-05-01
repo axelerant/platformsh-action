@@ -90095,7 +90095,7 @@ async function cleanPrEnv() {
     }
     const client = await getCliClient(getInput('cli-token'));
     // Get env details
-    const prRef = `${prNumber}/merge`;
+    const prRef = getInput('environment-name') || `${prNumber}/merge`;
     let envResult;
     try {
         envResult = await client.getEnvironment(getInput('project-id'), encodeURIComponent(prRef));

@@ -44,7 +44,7 @@
     "platformsh-client": "^0.2.40"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.5",
+    "@biomejs/biome": "^2.5.6",
     "@github/local-action": "^7.0.1",
     "@jest/globals": "^30.4.1",
     "@rollup/plugin-commonjs": "^29.0.3",

@@ -44,7 +44,7 @@
     "platformsh-client": "^0.2.40"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.5",
+    "@biomejs/biome": "^2.5.7",
     "@github/local-action": "^7.0.1",
     "@jest/globals": "^30.4.1",
     "@rollup/plugin-commonjs": "^29.0.3",
@@ -54,7 +54,7 @@
     "@types/node": "^24.12.2",
     "jest": "^30.4.2",
     "make-coverage-badge": "^1.2.0",
-    "rollup": "^4.62.3",
+    "rollup": "^4.62.4",
     "ts-jest": "^29.4.12",
     "ts-jest-resolver": "^2.0.1",
     "typescript": "^5.9.3"
